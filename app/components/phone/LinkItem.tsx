@@ -1,6 +1,9 @@
 import React from "react";
 import { getPlatformStyle } from "../constants/platforms";
-import { ArrowRightIcon, getIconComponent } from "../icons/PlatformIcons";
+import {
+  ArrowRightIcon,
+  getIconComponent,
+} from "../icons/PlatformIconsPreviewButtons";
 
 interface LinkItemProps {
   platform: string;

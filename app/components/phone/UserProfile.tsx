@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { UserAvatarIcon } from "../icons/PlatformIcons";
+import { UserAvatarIcon } from "../icons/PlatformIconsPreviewButtons";
 
 interface UserProfileProps {
   name: string;
