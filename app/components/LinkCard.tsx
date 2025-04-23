@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { getPlatformStyle, PlatformStyle } from "./constants/platforms";
+import PlatformIcon from "./icons/platform/PlatformIcon";
 
 interface LinkCardProps {
   platform: string;
@@ -43,7 +44,6 @@ const PlatformSelector: React.FC<{
     "LinkedIn",
     "Facebook",
     "Twitter",
-    "Instagram",
     "Codepen",
     "Codewars",
     "DevTo",
@@ -55,22 +55,197 @@ const PlatformSelector: React.FC<{
     "Twitch",
   ];
 
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [hoveredPlatform, setHoveredPlatform] = useState<string | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Initialize refs array for menu items
+  useEffect(() => {
+    itemRefs.current = itemRefs.current.slice(0, availablePlatforms.length);
+  }, [availablePlatforms.length]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Focus management for dropdown
+  useEffect(() => {
+    if (isOpen) {
+      if (focusedIndex >= 0 && itemRefs.current[focusedIndex]) {
+        itemRefs.current[focusedIndex]?.focus();
+      } else {
+        // Focus first item when opening with keyboard
+        setFocusedIndex(0);
+      }
+    } else {
+      setFocusedIndex(-1);
+    }
+  }, [isOpen, focusedIndex]);
+
+  const handlePlatformSelection = (platform: string) => {
+    const event = {
+      target: { value: platform },
+    } as React.ChangeEvent<HTMLSelectElement>;
+    onChange(event);
+    setIsOpen(false);
+    buttonRef.current?.focus(); // Return focus to button after selection
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen) {
+      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "Escape":
+        e.preventDefault();
+        setIsOpen(false);
+        buttonRef.current?.focus();
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        setFocusedIndex((prevIndex) =>
+          prevIndex < availablePlatforms.length - 1 ? prevIndex + 1 : 0
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setFocusedIndex((prevIndex) =>
+          prevIndex > 0 ? prevIndex - 1 : availablePlatforms.length - 1
+        );
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (focusedIndex >= 0) {
+          handlePlatformSelection(availablePlatforms[focusedIndex]);
+        }
+        break;
+      case "Tab":
+        e.preventDefault(); // Prevent tab navigation while dropdown is open
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-800 mb-1">
+      <label
+        className="block text-sm font-medium text-gray-800 mb-1"
+        id="platform-label"
+      >
         Platform
       </label>
-      <select
-        className="input w-full p-3 rounded-lg border border-[#D9D9D9]"
-        value={value}
-        onChange={onChange}
-      >
-        {availablePlatforms.map((p) => (
-          <option key={p} value={p}>
-            {p}
-          </option>
-        ))}
-      </select>
+      <div className="relative" ref={dropdownRef}>
+        <button
+          type="button"
+          ref={buttonRef}
+          className={`flex items-center justify-between w-full p-3 rounded-lg border ${
+            isOpen
+              ? "border-[#633CFF] ring-2 ring-[#633CFF]/25"
+              : "border-[#D9D9D9]"
+          } bg-white focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#633CFF]/25 transition-all`}
+          onClick={() => setIsOpen(!isOpen)}
+          onKeyDown={handleKeyDown}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          aria-labelledby="platform-label"
+        >
+          <div className="flex items-center gap-3">
+            {value && (
+              <div className="flex items-center justify-center w-5 h-5">
+                <PlatformIcon name={value as any} version="mono" />
+              </div>
+            )}
+            <span className="font-medium text-gray-800 leading-5">{value}</span>
+          </div>
+          <svg
+            width="14"
+            height="9"
+            viewBox="0 0 14 9"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+          >
+            <path d="M1 1L7 7L13 1" stroke="#633CFF" strokeWidth="2" />
+          </svg>
+        </button>
+
+        {isOpen && (
+          <div
+            ref={menuRef}
+            className="absolute z-10 w-full mt-1 bg-white border border-[#D9D9D9] rounded-lg shadow-lg max-h-64 overflow-y-auto"
+            role="listbox"
+            aria-labelledby="platform-label"
+            tabIndex={-1}
+          >
+            {availablePlatforms.map((platform, index) => (
+              <button
+                key={platform}
+                ref={(el) => {
+                  itemRefs.current[index] = el;
+                }}
+                className={`flex items-center w-full p-3 text-left transition-colors ${
+                  focusedIndex === index
+                    ? "bg-[#EFEBFF] outline-none"
+                    : hoveredPlatform === platform
+                    ? "bg-gray-100"
+                    : ""
+                }`}
+                onClick={() => handlePlatformSelection(platform)}
+                onMouseEnter={() => setHoveredPlatform(platform)}
+                onMouseLeave={() => setHoveredPlatform(null)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setFocusedIndex(index)}
+                role="option"
+                aria-selected={value === platform}
+                tabIndex={focusedIndex === index ? 0 : -1}
+              >
+                <div className="flex items-center justify-center w-5 h-5 mr-3">
+                  <PlatformIcon
+                    name={platform as any}
+                    version="mono"
+                    color={
+                      focusedIndex === index || hoveredPlatform === platform
+                        ? "#633CFF"
+                        : undefined
+                    }
+                  />
+                </div>
+                <span
+                  className={`font-medium leading-5 ${
+                    focusedIndex === index || hoveredPlatform === platform
+                      ? "text-[#633CFF]"
+                      : "text-gray-800"
+                  }`}
+                >
+                  {platform}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -87,7 +262,7 @@ const UrlInput: React.FC<{
     <label className="block text-sm font-medium text-gray-800 mb-1">Link</label>
     <input
       type="url"
-      className="input w-full p-3 rounded-lg border border-[#D9D9D9]"
+      className="input w-full p-3 rounded-lg border border-[#D9D9D9] bg-white focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#633CFF]/25 transition-all"
       value={value}
       onChange={onChange}
       placeholder={`e.g. https://${platform.toLowerCase()}.com/username`}

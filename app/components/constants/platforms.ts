@@ -10,11 +10,6 @@ export const PLATFORM_STYLES: Record<string, PlatformStyle> = {
   LinkedIn: { bgColor: "#2D68FF", textColor: "#FFFFFF", icon: "/linkedin.svg" },
   Facebook: { bgColor: "#4267B2", textColor: "#FFFFFF", icon: "/facebook.svg" },
   Twitter: { bgColor: "#1DA1F2", textColor: "#FFFFFF", icon: "/twitter.svg" },
-  Instagram: {
-    bgColor: "#E4405F",
-    textColor: "#FFFFFF",
-    icon: "/instagram.svg",
-  },
   Codepen: { bgColor: "#000000", textColor: "#FFFFFF", icon: "/globe.svg" },
   Codewars: { bgColor: "#B1361E", textColor: "#FFFFFF", icon: "/globe.svg" },
   DevTo: { bgColor: "#0A0A0A", textColor: "#FFFFFF", icon: "/globe.svg" },
