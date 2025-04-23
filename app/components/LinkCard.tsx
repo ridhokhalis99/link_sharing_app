@@ -1,7 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { useDrag, useDrop } from "react-dnd";
 import { getPlatformStyle, PlatformStyle } from "./constants/platforms";
 import PlatformIcon from "./icons/platform/PlatformIcon";
+
+// Define type for the drag item
+interface DragItem {
+  index: number;
+  id: string;
+  type: string;
+}
 
 interface LinkCardProps {
   platform: string;
@@ -9,7 +17,9 @@ interface LinkCardProps {
   index: number;
   onRemove: (index: number) => void;
   onEdit: (index: number, platform: string, url: string) => void;
-  onReorder?: (dragIndex: number, hoverIndex: number) => void;
+  onReorder: (dragIndex: number, hoverIndex: number) => void;
+  isNew?: boolean;
+  isModified?: boolean;
 }
 
 /**
@@ -280,7 +290,83 @@ const LinkCard: React.FC<LinkCardProps> = ({
   onRemove,
   onEdit,
   onReorder,
+  isNew,
+  isModified,
 }) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Setup drag source
+  const [{ isDragging }, drag] = useDrag({
+    type: "LINK_CARD",
+    item: () => {
+      return { index };
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  // Setup drop target
+  const [{ handlerId }, drop] = useDrop({
+    accept: "LINK_CARD",
+    collect(monitor) {
+      return {
+        handlerId: monitor.getHandlerId(),
+      };
+    },
+    hover(item: any, monitor) {
+      if (!ref.current) {
+        return;
+      }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      // Don't replace items with themselves
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      // Determine rectangle on screen
+      const hoverBoundingRect = ref.current?.getBoundingClientRect();
+
+      // Get vertical middle
+      const hoverMiddleY =
+        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+      // Determine mouse position
+      const clientOffset = monitor.getClientOffset();
+
+      // Get pixels to the top
+      const hoverClientY = clientOffset!.y - hoverBoundingRect.top;
+
+      // Only perform the move when the mouse has crossed half of the items height
+      // When dragging downwards, only move when the cursor is below 50%
+      // When dragging upwards, only move when the cursor is above 50%
+
+      // Dragging downwards
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+
+      // Dragging upwards
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
+
+      // Time to actually perform the action
+      onReorder(dragIndex, hoverIndex);
+
+      // Note: we're mutating the monitor item here!
+      // Generally it's better to avoid mutations,
+      // but it's good here for the sake of performance
+      // to avoid expensive index searches.
+      item.index = hoverIndex;
+    },
+  });
+
+  // Connect drag and drop refs
+  drag(drop(ref));
+
   const handlePlatformChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onEdit(index, e.target.value, url);
   };
@@ -289,16 +375,43 @@ const LinkCard: React.FC<LinkCardProps> = ({
     onEdit(index, platform, e.target.value);
   };
 
+  const opacity = isDragging ? 0.4 : 1;
+
   return (
-    <div className="bg-[#FAFAFA] p-5 rounded-lg border border-[#D9D9D9] mb-4">
-      <div className="flex justify-between items-center mb-4">
+    <div
+      ref={ref}
+      className={`bg-[#FAFAFA] p-5 rounded-lg border ${
+        isNew
+          ? "border-green-400"
+          : isModified
+          ? "border-blue-400"
+          : "border-[#D9D9D9]"
+      } mb-4 relative cursor-move`}
+      style={{ opacity }}
+      data-handler-id={handlerId}
+    >
+      {(isNew || isModified) && (
+        <div className="absolute top-2 right-2 z-10">
+          <span
+            className={`text-xs px-2 py-1 rounded-full ${
+              isNew
+                ? "bg-green-100 text-green-800"
+                : "bg-blue-100 text-blue-800"
+            }`}
+          >
+            {isNew ? "New" : "Modified"}
+          </span>
+        </div>
+      )}
+
+      <div className="flex justify-between items-center mb-4 cursor-move">
         <div className="flex items-center">
           <DragHandle />
           <span className="font-semibold text-gray-800">Link #{index + 1}</span>
         </div>
         <button
           onClick={() => onRemove(index)}
-          className="text-gray-700 hover:text-red-600 transition-colors"
+          className="text-gray-700 hover:text-red-600 transition-colors cursor-pointer"
           aria-label="Remove link"
         >
           Remove

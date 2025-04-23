@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import LinkCard from "./LinkCard";
-import { getUserLinks, createLink, updateLink, deleteLink } from "../lib/links";
+import {
+  getUserLinks,
+  createLink,
+  updateLink,
+  deleteLink,
+  updateLinksOrder,
+} from "../lib/links";
 import { Link } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 
@@ -8,6 +14,11 @@ export interface LinkItem {
   id?: string;
   platform: string;
   url: string;
+  order?: number;
+  isNew?: boolean;
+  isModified?: boolean;
+  isDeleted?: boolean;
+  isReordered?: boolean;
 }
 
 interface LinksManagerProps {
@@ -88,14 +99,15 @@ const LinksManager: React.FC<LinksManagerProps> = ({
   onLinksChange,
   initialLinks = [],
 }) => {
+  const [originalLinks, setOriginalLinks] = useState<LinkItem[]>([]);
   const [links, setLinks] = useState<LinkItem[]>(initialLinks);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [orderChanged, setOrderChanged] = useState<boolean>(false);
   const { user } = useAuth();
 
   useEffect(() => {
-    // Fetch links from Supabase on component mount
     let isMounted = true;
     const fetchLinks = async () => {
       if (!user) {
@@ -103,6 +115,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
         if (isMounted) {
           setIsLoading(false);
           setLinks([]);
+          setOriginalLinks([]);
         }
         return;
       }
@@ -112,14 +125,17 @@ const LinksManager: React.FC<LinksManagerProps> = ({
         console.log("Attempting to fetch links for user:", user.id);
         const userLinks = await getUserLinks();
 
-        // Only update state if component is still mounted
         if (isMounted) {
           const formattedLinks = userLinks.map((link) => ({
             id: link.id,
             platform: link.platform,
             url: link.url,
+            order: link.order,
           }));
 
+          formattedLinks.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+          setOriginalLinks(formattedLinks);
           setLinks(formattedLinks);
           onLinksChange(formattedLinks);
           setError(null);
@@ -137,6 +153,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
             );
           }
           setLinks([]);
+          setOriginalLinks([]);
         }
       } finally {
         if (isMounted) {
@@ -147,117 +164,159 @@ const LinksManager: React.FC<LinksManagerProps> = ({
 
     fetchLinks();
 
-    // Cleanup function to prevent state updates if component unmounts
     return () => {
       isMounted = false;
     };
-  }, [user?.id]); // Only re-run when user ID changes
+  }, [user?.id]);
 
-  const addNewLink = async () => {
-    const newLink = { platform: "GitHub", url: "" };
-    setIsSaving(true);
+  const addNewLink = () => {
+    const highestOrder = links.reduce(
+      (max, link) => Math.max(max, link.order ?? 0),
+      -1
+    );
 
-    try {
-      const createdLink = await createLink({
-        platform: newLink.platform,
-        url: newLink.url,
-        title: newLink.platform, // Using platform name as title for now
-      });
+    const newLink = {
+      platform: "GitHub",
+      url: "",
+      order: highestOrder + 1,
+      isNew: true,
+    };
 
-      if (createdLink) {
-        const newLinkItem = {
-          id: createdLink.id,
-          platform: createdLink.platform,
-          url: createdLink.url,
-        };
-
-        const newLinks = [...links, newLinkItem];
-        setLinks(newLinks);
-        onLinksChange(newLinks);
-      }
-    } catch (error) {
-      console.error("Error creating link:", error);
-    } finally {
-      setIsSaving(false);
-    }
+    const newLinks = [...links, newLink];
+    setLinks(newLinks);
+    onLinksChange(newLinks);
   };
 
-  const removeLink = async (index: number) => {
+  const removeLink = (index: number) => {
     const linkToRemove = links[index];
-    if (!linkToRemove.id) return;
 
-    setIsSaving(true);
-
-    try {
-      const success = await deleteLink(linkToRemove.id);
-
-      if (success) {
-        const newLinks = [...links];
-        newLinks.splice(index, 1);
-        setLinks(newLinks);
-        onLinksChange(newLinks);
-      }
-    } catch (error) {
-      console.error("Error removing link:", error);
-    } finally {
-      setIsSaving(false);
+    if (linkToRemove.isNew) {
+      const newLinks = [...links];
+      newLinks.splice(index, 1);
+      setLinks(newLinks);
+      onLinksChange(newLinks);
+    } else {
+      const newLinks = [...links];
+      newLinks[index] = {
+        ...linkToRemove,
+        isDeleted: true,
+      };
+      setLinks(newLinks);
+      onLinksChange(newLinks.filter((link) => !link.isDeleted));
     }
   };
 
-  const updateLinkItem = async (
-    index: number,
-    platform: string,
-    url: string
-  ) => {
+  const updateLinkItem = (index: number, platform: string, url: string) => {
     const linkToUpdate = links[index];
-    if (!linkToUpdate.id) return;
+    const newLinks = [...links];
 
-    setIsSaving(true);
+    newLinks[index] = {
+      ...linkToUpdate,
+      platform,
+      url,
+      isModified: linkToUpdate.isNew ? undefined : true,
+    };
 
-    try {
-      const updatedLink = await updateLink(linkToUpdate.id, {
-        platform,
-        url,
-        title: platform, // Using platform name as title for now
-      });
-
-      if (updatedLink) {
-        const newLinks = [...links];
-        newLinks[index] = {
-          id: updatedLink.id,
-          platform: updatedLink.platform,
-          url: updatedLink.url,
-        };
-        setLinks(newLinks);
-        onLinksChange(newLinks);
-      }
-    } catch (error) {
-      console.error("Error updating link:", error);
-    } finally {
-      setIsSaving(false);
-    }
+    setLinks(newLinks);
+    onLinksChange(newLinks.filter((link) => !link.isDeleted));
   };
 
   const reorderLinks = (dragIndex: number, hoverIndex: number) => {
-    const newLinks = [...links];
-    const draggedItem = newLinks[dragIndex];
-    newLinks.splice(dragIndex, 1);
-    newLinks.splice(hoverIndex, 0, draggedItem);
-    setLinks(newLinks);
-    onLinksChange(newLinks);
-    // Note: We're not persisting the order to the database yet
-    // That would require adding a 'position' field to our links table
+    const updatedLinks = [...links];
+
+    const draggedItem = updatedLinks[dragIndex];
+    updatedLinks.splice(dragIndex, 1);
+    updatedLinks.splice(hoverIndex, 0, draggedItem);
+
+    const reorderedLinks = updatedLinks.map((link, index) => ({
+      ...link,
+      order: index,
+      isReordered: link.id && !link.isNew ? true : link.isReordered,
+    }));
+
+    setLinks(reorderedLinks);
+    onLinksChange(reorderedLinks.filter((link) => !link.isDeleted));
+    setOrderChanged(true);
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    // This could be used to save all links in batch if needed
-    // For now, we're saving each link individually when it's edited
-    setTimeout(() => {
+
+    try {
+      const savePromises: Promise<any>[] = [];
+
+      const newLinks = links.filter((link) => link.isNew && !link.isDeleted);
+      for (const link of newLinks) {
+        savePromises.push(
+          createLink({
+            platform: link.platform,
+            url: link.url,
+            title: link.platform,
+          })
+        );
+      }
+
+      const modifiedLinks = links.filter(
+        (link) => link.isModified && !link.isDeleted
+      );
+      for (const link of modifiedLinks) {
+        if (link.id) {
+          savePromises.push(
+            updateLink(link.id, {
+              platform: link.platform,
+              url: link.url,
+              title: link.platform,
+            })
+          );
+        }
+      }
+
+      const deletedLinks = links.filter(
+        (link) => link.isDeleted && !link.isNew && link.id
+      );
+      for (const link of deletedLinks) {
+        if (link.id) {
+          savePromises.push(deleteLink(link.id));
+        }
+      }
+
+      if (orderChanged) {
+        const linksToReorder = links
+          .filter((link) => link.id && !link.isDeleted)
+          .map((link, index) => ({
+            id: link.id!,
+            order: index,
+          }));
+
+        if (linksToReorder.length > 0) {
+          savePromises.push(updateLinksOrder(linksToReorder));
+        }
+      }
+
+      await Promise.all(savePromises);
+
+      const updatedLinks = await getUserLinks();
+      const formattedLinks = updatedLinks.map((link) => ({
+        id: link.id,
+        platform: link.platform,
+        url: link.url,
+        order: link.order,
+      }));
+
+      setOriginalLinks(formattedLinks);
+      setLinks(formattedLinks);
+      onLinksChange(formattedLinks);
+      setOrderChanged(false);
+
+      console.log("All changes saved successfully");
+    } catch (error) {
+      console.error("Error saving changes:", error);
+    } finally {
       setIsSaving(false);
-      // You could show a success toast or notification here
-    }, 1000);
+    }
   };
+
+  const visibleLinks = links.filter((link) => !link.isDeleted);
 
   if (isLoading) {
     return (
@@ -281,6 +340,12 @@ const LinksManager: React.FC<LinksManagerProps> = ({
     );
   }
 
+  const hasUnsavedChanges =
+    links.some(
+      (link) =>
+        link.isNew || link.isModified || link.isDeleted || link.isReordered
+    ) || orderChanged;
+
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       <header className="mb-6">
@@ -291,14 +356,14 @@ const LinksManager: React.FC<LinksManagerProps> = ({
         </p>
       </header>
 
-      {links.length === 0 ? (
+      {visibleLinks.length === 0 ? (
         <EmptyState onAddLink={addNewLink} />
       ) : (
         <>
           <AddLinkButton onClick={addNewLink} />
 
           <div className="mt-6 space-y-4">
-            {links.map((link, index) => (
+            {visibleLinks.map((link, index) => (
               <LinkCard
                 key={link.id || index}
                 platform={link.platform}
@@ -307,16 +372,50 @@ const LinksManager: React.FC<LinksManagerProps> = ({
                 onRemove={removeLink}
                 onEdit={updateLinkItem}
                 onReorder={reorderLinks}
+                isNew={link.isNew}
+                isModified={link.isModified}
               />
             ))}
 
             <div className="flex justify-end mt-6">
               <button
-                className="btn-primary px-6 py-3 bg-[#633CFF] text-white rounded-lg hover:bg-[#5332D5] transition-colors disabled:bg-opacity-60 disabled:cursor-not-allowed"
+                className={`px-6 py-3 rounded-lg ${
+                  hasUnsavedChanges
+                    ? "bg-[#633CFF] text-white hover:bg-[#5332D5]"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                } transition-colors disabled:opacity-60`}
                 onClick={handleSave}
-                disabled={isSaving}
+                disabled={isSaving || !hasUnsavedChanges}
               >
-                {isSaving ? "Saving..." : "Save"}
+                {isSaving ? (
+                  <>
+                    <span className="inline-block mr-2">
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </span>
+                    Saving...
+                  </>
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>

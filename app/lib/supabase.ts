@@ -13,6 +13,7 @@ export type Link = {
   url: string;
   title: string;
   platform: string;
+  order: number;
   created_at: string;
   updated_at: string;
 };
