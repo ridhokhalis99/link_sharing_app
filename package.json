@@ -6,9 +6,14 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migration:new": "npx supabase migration new",
+    "migration:up": "npx supabase db push",
+    "migration:status": "npx supabase migration list"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.4",
     "@types/js-cookie": "^3.0.6",
     "js-cookie": "^3.0.5",
     "next": "15.3.1",
@@ -23,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
+    "supabase": "^2.22.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

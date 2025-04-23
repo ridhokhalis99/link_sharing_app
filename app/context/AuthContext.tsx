@@ -8,67 +8,169 @@ import {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { supabase } from "../lib/supabase";
+import { Session, User, AuthChangeEvent } from "@supabase/supabase-js";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  user: User | null;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  signup: (email: string, password: string) => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   // Check if user is already authenticated on mount
   useEffect(() => {
-    const token = Cookies.get("auth_token");
-    if (token) {
-      setIsAuthenticated(true);
-    }
-  }, []);
+    const checkSession = async () => {
+      try {
+        // Get session from Supabase
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-  const signup = async (email: string, password: string) => {
-    // In a real app, you would call an API to create the user account
-    console.log(`Creating account for ${email}`);
+        if (session) {
+          console.log("Session found:", session.user.email);
+          setIsAuthenticated(true);
+          setUser(session.user);
+        } else {
+          console.log("No session found");
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error checking auth state:", error);
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Set authentication cookie (expires in 7 days)
-    Cookies.set("auth_token", "demo-token", { expires: 7 });
-    setIsAuthenticated(true);
+    checkSession();
 
-    // Navigate to home page
-    router.push("/");
-  };
+    // Set up auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session) => {
+      console.log("Auth state changed:", event, session?.user?.email);
+
+      if (session) {
+        setIsAuthenticated(true);
+        setUser(session.user);
+
+        // If user logs in or signs up, redirect to home
+        if (event === "SIGNED_IN") {
+          console.log("Redirecting to home after auth event:", event);
+          router.push("/");
+        }
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+
+        // If user logs out, redirect to login
+        if (event === "SIGNED_OUT") {
+          router.push("/login");
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router]);
 
   const login = async (email: string, password: string) => {
-    // In a real app, you would validate credentials with an API
-    // For demo purposes, we'll just set a cookie
+    try {
+      console.log("Attempting login for:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    // Simulate API call
-    console.log(`Logging in with ${email}`);
+      if (error) {
+        console.error("Login error:", error.message);
+        return { error: error.message };
+      }
 
-    // Set authentication cookie (expires in 7 days)
-    Cookies.set("auth_token", "demo-token", { expires: 7 });
-    setIsAuthenticated(true);
+      if (data && data.user) {
+        console.log("Login successful for:", data.user.email);
 
-    // Navigate to home page
-    router.push("/");
+        // Force update the state immediately
+        setIsAuthenticated(true);
+        setUser(data.user);
+
+        return {};
+      } else {
+        return { error: "Login failed" };
+      }
+    } catch (error: any) {
+      console.error("Unexpected login error:", error);
+      return { error: error.message || "Login failed" };
+    }
   };
 
-  const logout = () => {
-    // Remove auth cookie
-    Cookies.remove("auth_token");
-    setIsAuthenticated(false);
+  const signup = async (email: string, password: string) => {
+    try {
+      console.log("Attempting signup for:", email);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    // Navigate to login page
-    router.push("/login");
+      if (error) {
+        console.error("Signup error:", error.message);
+        return { error: error.message };
+      }
+
+      if (data && data.user) {
+        console.log("Signup successful for:", data.user.email);
+
+        // Force update the state immediately
+        setIsAuthenticated(true);
+        setUser(data.user);
+
+        return {};
+      } else {
+        return { error: "Something went wrong during signup" };
+      }
+    } catch (error: any) {
+      console.error("Unexpected signup error:", error);
+      return { error: error.message || "Signup failed" };
+    }
   };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setIsAuthenticated(false);
+      setUser(null);
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  if (loading) {
+    // You could add a loading spinner here
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#633CFF]"></div>
+      </div>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, user, login, signup, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

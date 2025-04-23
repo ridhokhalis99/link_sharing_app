@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LinkCard from "./LinkCard";
+import { getUserLinks, createLink, updateLink, deleteLink } from "../lib/links";
+import { Link } from "../lib/supabase";
+import { useAuth } from "../context/AuthContext";
 
 export interface LinkItem {
+  id?: string;
   platform: string;
   url: string;
 }
@@ -86,25 +90,152 @@ const LinksManager: React.FC<LinksManagerProps> = ({
 }) => {
   const [links, setLinks] = useState<LinkItem[]>(initialLinks);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  const addNewLink = () => {
-    const newLinks = [...links, { platform: "GitHub", url: "" }];
-    setLinks(newLinks);
-    onLinksChange(newLinks);
+  useEffect(() => {
+    // Fetch links from Supabase on component mount
+    let isMounted = true;
+    const fetchLinks = async () => {
+      if (!user) {
+        console.log("No user found, waiting for auth context to initialize...");
+        if (isMounted) {
+          setIsLoading(false);
+          setLinks([]);
+        }
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        console.log("Attempting to fetch links for user:", user.id);
+        const userLinks = await getUserLinks();
+
+        // Only update state if component is still mounted
+        if (isMounted) {
+          const formattedLinks = userLinks.map((link) => ({
+            id: link.id,
+            platform: link.platform,
+            url: link.url,
+          }));
+
+          setLinks(formattedLinks);
+          onLinksChange(formattedLinks);
+          setError(null);
+        }
+      } catch (error: any) {
+        console.error("Error in LinksManager when fetching links:", error);
+        if (isMounted) {
+          if (error.message === "User not authenticated") {
+            setError(
+              "You must be logged in to view your links. Please log in again."
+            );
+          } else {
+            setError(
+              `Failed to load links: ${error.message || "Unknown error"}`
+            );
+          }
+          setLinks([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchLinks();
+
+    // Cleanup function to prevent state updates if component unmounts
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]); // Only re-run when user ID changes
+
+  const addNewLink = async () => {
+    const newLink = { platform: "GitHub", url: "" };
+    setIsSaving(true);
+
+    try {
+      const createdLink = await createLink({
+        platform: newLink.platform,
+        url: newLink.url,
+        title: newLink.platform, // Using platform name as title for now
+      });
+
+      if (createdLink) {
+        const newLinkItem = {
+          id: createdLink.id,
+          platform: createdLink.platform,
+          url: createdLink.url,
+        };
+
+        const newLinks = [...links, newLinkItem];
+        setLinks(newLinks);
+        onLinksChange(newLinks);
+      }
+    } catch (error) {
+      console.error("Error creating link:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const removeLink = (index: number) => {
-    const newLinks = [...links];
-    newLinks.splice(index, 1);
-    setLinks(newLinks);
-    onLinksChange(newLinks);
+  const removeLink = async (index: number) => {
+    const linkToRemove = links[index];
+    if (!linkToRemove.id) return;
+
+    setIsSaving(true);
+
+    try {
+      const success = await deleteLink(linkToRemove.id);
+
+      if (success) {
+        const newLinks = [...links];
+        newLinks.splice(index, 1);
+        setLinks(newLinks);
+        onLinksChange(newLinks);
+      }
+    } catch (error) {
+      console.error("Error removing link:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const updateLink = (index: number, platform: string, url: string) => {
-    const newLinks = [...links];
-    newLinks[index] = { platform, url };
-    setLinks(newLinks);
-    onLinksChange(newLinks);
+  const updateLinkItem = async (
+    index: number,
+    platform: string,
+    url: string
+  ) => {
+    const linkToUpdate = links[index];
+    if (!linkToUpdate.id) return;
+
+    setIsSaving(true);
+
+    try {
+      const updatedLink = await updateLink(linkToUpdate.id, {
+        platform,
+        url,
+        title: platform, // Using platform name as title for now
+      });
+
+      if (updatedLink) {
+        const newLinks = [...links];
+        newLinks[index] = {
+          id: updatedLink.id,
+          platform: updatedLink.platform,
+          url: updatedLink.url,
+        };
+        setLinks(newLinks);
+        onLinksChange(newLinks);
+      }
+    } catch (error) {
+      console.error("Error updating link:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const reorderLinks = (dragIndex: number, hoverIndex: number) => {
@@ -114,16 +245,41 @@ const LinksManager: React.FC<LinksManagerProps> = ({
     newLinks.splice(hoverIndex, 0, draggedItem);
     setLinks(newLinks);
     onLinksChange(newLinks);
+    // Note: We're not persisting the order to the database yet
+    // That would require adding a 'position' field to our links table
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call or saving process
+    // This could be used to save all links in batch if needed
+    // For now, we're saving each link individually when it's edited
     setTimeout(() => {
       setIsSaving(false);
       // You could show a success toast or notification here
     }, 1000);
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6 flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#633CFF]"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col justify-center items-center h-64 text-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <button
+          className="px-4 py-2 bg-[#633CFF] text-white rounded-lg"
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
@@ -144,12 +300,12 @@ const LinksManager: React.FC<LinksManagerProps> = ({
           <div className="mt-6 space-y-4">
             {links.map((link, index) => (
               <LinkCard
-                key={index}
+                key={link.id || index}
                 platform={link.platform}
                 url={link.url}
                 index={index}
                 onRemove={removeLink}
-                onEdit={updateLink}
+                onEdit={updateLinkItem}
                 onReorder={reorderLinks}
               />
             ))}
