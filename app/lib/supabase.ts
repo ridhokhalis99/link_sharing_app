@@ -17,3 +17,13 @@ export type Link = {
   created_at: string;
   updated_at: string;
 };
+
+export type Profile = {
+  id: string; // This is both the primary key and the user ID (from auth.users)
+  first_name: string;
+  last_name: string;
+  email: string;
+  image_url?: string;
+  created_at: string;
+  updated_at: string;
+};

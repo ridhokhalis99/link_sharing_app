@@ -1,5 +1,10 @@
-import React from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import {
+  saveUserProfile,
+  uploadProfileImage,
+} from "../lib/profiles";
+import { useAuth } from "../context/AuthContext";
 
 interface ProfileCardProps {
   firstName: string;
@@ -21,17 +26,153 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   imageUrl,
   onUpdate,
 }) => {
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { user } = useAuth();
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Local form state to ensure controlled inputs
+  const [formState, setFormState] = useState({
+    firstName: firstName || "",
+    lastName: lastName || "",
+    email: email || "",
+    imageUrl: imageUrl || "",
+  });
+
+  // Update local state when props change
+  useEffect(() => {
+    setFormState({
+      firstName: firstName || "",
+      lastName: lastName || "",
+      email: email || "",
+      imageUrl: imageUrl || "",
+    });
+  }, [firstName, lastName, email, imageUrl]);
+
+  // Track if we have a local image that needs to be uploaded
+  const [hasNewLocalImage, setHasNewLocalImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Store a stable reference to the current onUpdate function
+  const onUpdateRef = useRef(onUpdate);
+
+  // Update the ref when onUpdate changes
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  }, [onUpdate]);
+
+  // Safe update function that uses the ref
+  const safeUpdate = useCallback(
+    (data: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      imageUrl?: string;
+    }) => {
+      onUpdateRef.current(data);
+      // Also update local form state
+      setFormState(prev => ({
+        ...prev,
+        ...data
+      }));
+    },
+    []
+  );
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      // In a real app, you'd upload the file to a server
+      const file = e.target.files[0];
+
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        setError("Image must be less than 2MB");
+        return;
+      }
+
+      // Clear any previous errors
+      setError(null);
+
+      // Flag that we have a new image that needs to be uploaded
+      setHasNewLocalImage(true);
+
+      // Temporarily show the image from local
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
-          onUpdate({ imageUrl: event.target.result as string });
+          const newImageUrl = event.target.result as string;
+          safeUpdate({ imageUrl: newImageUrl });
         }
       };
-      reader.readAsDataURL(e.target.files[0]);
+      reader.readAsDataURL(file);
     }
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      // First handle image upload if there's a new image
+      let finalImageUrl = formState.imageUrl;
+
+      if (hasNewLocalImage && fileInputRef.current?.files?.length) {
+        const uploadedUrl = await uploadProfileImage(
+          fileInputRef.current.files[0]
+        );
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
+        } else {
+          throw new Error("Failed to upload profile image");
+        }
+      }
+
+      // Save profile data
+      const profileData = {
+        first_name: formState.firstName,
+        last_name: formState.lastName,
+        email: formState.email,
+        image_url: finalImageUrl,
+      };
+
+      const result = await saveUserProfile(profileData);
+
+      if (result) {
+        // Update the parent component's state with the saved data
+        safeUpdate({
+          firstName: result.first_name || formState.firstName,
+          lastName: result.last_name || formState.lastName,
+          email: result.email || formState.email,
+          imageUrl: finalImageUrl,
+        });
+        
+        if (hasNewLocalImage) {
+          setHasNewLocalImage(false);
+        }
+
+        setSuccessMessage("Profile saved successfully!");
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        throw new Error("Failed to save profile data");
+      }
+    } catch (err) {
+      console.error("Error saving profile:", err);
+      setError(
+        typeof err === "object" && err !== null && "message" in err
+          ? (err as Error).message
+          : "Failed to save profile data"
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof typeof formState, value: string) => {
+    setFormState(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   return (
@@ -43,23 +184,38 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         Add your details to create a personal touch to your profile.
       </p>
 
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+          <p>{successMessage}</p>
+        </div>
+      )}
+
       {/* Profile Picture */}
       <div className="bg-[#FAFAFA] p-5 rounded-xl mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between">
-          <label className="text-[#737373] font-medium mb-4 md:mb-0">
+        <div className="flex flex-col md:flex-row md:items-center">
+          <label className="text-[#737373] font-medium mb-4 md:mb-0 md:w-1/3">
             Profile picture
           </label>
 
-          <div className="md:flex md:items-center gap-6">
+          <div className="md:flex md:items-center gap-6 md:w-2/3">
             <div className="w-[193px] h-[193px] bg-[#EFEBFF] rounded-xl flex flex-col items-center justify-center relative overflow-hidden mb-6 md:mb-0">
-              {imageUrl ? (
-                <Image
-                  src={imageUrl}
-                  alt="Profile"
-                  width={193}
-                  height={193}
-                  className="object-cover w-full h-full"
-                />
+              {formState.imageUrl ? (
+                <div className="w-full h-full">
+                  <Image
+                    src={formState.imageUrl}
+                    alt="Profile"
+                    width={193}
+                    height={193}
+                    className="object-cover w-full h-full"
+                    unoptimized={formState.imageUrl.startsWith("data:")} // Skip optimization for data URLs
+                  />
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center">
                   <svg
@@ -88,6 +244,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                 </div>
               )}
               <input
+                id="profile-image"
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 className="absolute inset-0 opacity-0 cursor-pointer"
@@ -96,7 +254,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             </div>
 
             <div className="text-[#737373] text-xs">
-              Image must be below 1024x1024px.
+              Image must be below 2MB.
               <br />
               Use PNG or JPG format.
             </div>
@@ -117,9 +275,12 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           <input
             id="firstName"
             type="text"
-            className="w-full px-4 py-3 border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#EFEBFF]"
-            value={firstName}
-            onChange={(e) => onUpdate({ firstName: e.target.value })}
+            className="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#EFEBFF]"
+            value={formState.firstName}
+            onChange={(e) => {
+              handleInputChange("firstName", e.target.value);
+              safeUpdate({ firstName: e.target.value });
+            }}
             placeholder="e.g. John"
           />
         </div>
@@ -135,9 +296,12 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           <input
             id="lastName"
             type="text"
-            className="w-full px-4 py-3 border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#EFEBFF]"
-            value={lastName}
-            onChange={(e) => onUpdate({ lastName: e.target.value })}
+            className="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#EFEBFF]"
+            value={formState.lastName}
+            onChange={(e) => {
+              handleInputChange("lastName", e.target.value);
+              safeUpdate({ lastName: e.target.value });
+            }}
             placeholder="e.g. Appleseed"
           />
         </div>
@@ -153,17 +317,31 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           <input
             id="email"
             type="email"
-            className="w-full px-4 py-3 border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#EFEBFF]"
-            value={email}
-            onChange={(e) => onUpdate({ email: e.target.value })}
+            className="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#EFEBFF]"
+            value={formState.email}
+            onChange={(e) => {
+              handleInputChange("email", e.target.value);
+              safeUpdate({ email: e.target.value });
+            }}
             placeholder="e.g. email@example.com"
           />
         </div>
       </div>
 
       <div className="flex justify-end mt-6">
-        <button className="bg-[#633CFF] text-white font-semibold px-7 py-3 rounded-lg hover:bg-[#7857FF] transition">
-          Save
+        <button
+          onClick={handleSaveProfile}
+          disabled={isSaving}
+          className="bg-[#633CFF] text-white font-semibold px-7 py-3 rounded-lg hover:bg-[#7857FF] transition disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isSaving ? (
+            <>
+              <span className="animate-spin inline-block h-4 w-4 border-t-2 border-white rounded-full mr-2"></span>
+              Saving...
+            </>
+          ) : (
+            "Save"
+          )}
         </button>
       </div>
     </div>
