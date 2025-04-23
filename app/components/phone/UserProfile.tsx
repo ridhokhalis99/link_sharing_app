@@ -24,13 +24,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ name, email, imageUrl }) => {
           />
         </div>
       ) : (
-        <div className="w-[96px] h-[96px] rounded-full mb-6 bg-gray-200 animate-pulse"></div>
+        <div className="w-[96px] h-[96px] rounded-full mb-6 bg-[#f2f2f2] animate-pulse"></div>
       )}
 
       {isEmpty ? (
         <>
-          <div className="h-[18px] w-[150px] bg-gray-200 rounded-full mb-3"></div>
-          <div className="h-[14px] w-[100px] bg-gray-100 rounded-full"></div>
+          <div className="h-[18px] w-[150px] bg-[#f2f2f2] rounded-full mb-3"></div>
+          <div className="h-[14px] w-[100px] bg-[#f2f2f2] rounded-full"></div>
         </>
       ) : (
         <>
