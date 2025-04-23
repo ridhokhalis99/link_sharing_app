@@ -17,7 +17,8 @@ interface LinkItem {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"links" | "profile">("links");
   const [userProfile, setUserProfile] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     imageUrl: "",
   });
@@ -25,7 +26,8 @@ export default function Home() {
   const [isPreview, setIsPreview] = useState(false);
 
   const handleProfileUpdate = (data: {
-    name?: string;
+    firstName?: string;
+    lastName?: string;
     email?: string;
     imageUrl?: string;
   }) => {
@@ -69,7 +71,8 @@ export default function Home() {
 
         <div className="flex-grow flex items-center justify-center">
           <PhonePreview
-            name={userProfile.name}
+            firstName={userProfile.firstName}
+            lastName={userProfile.lastName}
             email={userProfile.email}
             imageUrl={userProfile.imageUrl}
             links={links}
@@ -131,7 +134,7 @@ export default function Home() {
         </div>
         <button
           onClick={() => setIsPreview(true)}
-          className="btn-secondary border border-[#633CFF]"
+          className="btn-secondary border border-[#633CFF] bg-white"
         >
           Preview
         </button>
@@ -142,7 +145,8 @@ export default function Home() {
         {/* Phone Preview */}
         <div className="hidden md:block md:w-1/3">
           <PhonePreview
-            name={userProfile.name}
+            firstName={userProfile.firstName}
+            lastName={userProfile.lastName}
             email={userProfile.email}
             imageUrl={userProfile.imageUrl}
             links={links}
@@ -158,7 +162,8 @@ export default function Home() {
             />
           ) : (
             <ProfileCard
-              name={userProfile.name}
+              firstName={userProfile.firstName}
+              lastName={userProfile.lastName}
               email={userProfile.email}
               imageUrl={userProfile.imageUrl}
               onUpdate={handleProfileUpdate}

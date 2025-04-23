@@ -3,13 +3,23 @@ import Image from "next/image";
 import UserAvatarIcon from "../icons/UserAvatarIcon";
 
 interface UserProfileProps {
-  name: string;
-  email: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   imageUrl?: string;
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ name, email, imageUrl }) => {
-  const isEmpty = !name && !email;
+const UserProfile: React.FC<UserProfileProps> = ({
+  firstName,
+  lastName,
+  email,
+  imageUrl,
+}) => {
+  const isEmpty = !firstName && !lastName && !email;
+  const fullName =
+    firstName && lastName
+      ? `${firstName} ${lastName}`
+      : firstName || lastName || "";
 
   return (
     <div className="mt-8 mb-8 flex flex-col items-center">
@@ -17,7 +27,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ name, email, imageUrl }) => {
         <div className="w-[96px] h-[96px] rounded-full mb-6 overflow-hidden border-[3px] border-[#633CFF]">
           <Image
             src={imageUrl}
-            alt={name || "Profile"}
+            alt={fullName || "Profile"}
             width={96}
             height={96}
             className="object-cover w-full h-full"
@@ -35,7 +45,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ name, email, imageUrl }) => {
       ) : (
         <>
           <h2 className="text-[18px] font-semibold text-[#333333] mb-1">
-            {name || "Your Name"}
+            {fullName || "Your Name"}
           </h2>
           <p className="text-[14px] text-[#737373]">
             {email || "email@example.com"}

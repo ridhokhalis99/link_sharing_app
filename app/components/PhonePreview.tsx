@@ -9,8 +9,9 @@ export interface LinkItem {
 }
 
 interface PhonePreviewProps {
-  name: string;
-  email: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   imageUrl?: string;
   links: LinkItem[];
 }
@@ -18,24 +19,33 @@ interface PhonePreviewProps {
 /**
  * PhonePreview component displays a mobile phone preview with user profile and links
  *
- * @param name - User's display name
+ * @param firstName - User's first name
+ * @param lastName - User's last name
  * @param email - User's email address
  * @param imageUrl - Optional URL to user's profile image
  * @param links - Array of platform links to display
  */
 const PhonePreview: React.FC<PhonePreviewProps> = ({
-  name,
+  firstName,
+  lastName,
   email,
   imageUrl,
   links,
 }) => {
   return (
-    <PhoneFrame>
-      <div className="flex flex-col items-center">
-        <UserProfile name={name} email={email} imageUrl={imageUrl} />
-        <LinksList links={links} maxLinks={5} />
-      </div>
-    </PhoneFrame>
+    <div className="bg-white p-6 rounded-xl shadow-sm h-full flex flex-col justify-center items-center">
+      <PhoneFrame>
+        <div className="flex flex-col items-center">
+          <UserProfile
+            firstName={firstName}
+            lastName={lastName}
+            email={email}
+            imageUrl={imageUrl}
+          />
+          <LinksList links={links} maxLinks={5} />
+        </div>
+      </PhoneFrame>
+    </div>
   );
 };
 
