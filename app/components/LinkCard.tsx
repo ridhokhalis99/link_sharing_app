@@ -44,6 +44,15 @@ const PlatformSelector: React.FC<{
     "Facebook",
     "Twitter",
     "Instagram",
+    "Codepen",
+    "Codewars",
+    "DevTo",
+    "FreeCodeCamp",
+    "FrontendMentor",
+    "Gitlab",
+    "HashNode",
+    "StackOverflow",
+    "Twitch",
   ];
 
   return (

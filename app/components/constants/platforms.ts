@@ -15,6 +15,27 @@ export const PLATFORM_STYLES: Record<string, PlatformStyle> = {
     textColor: "#FFFFFF",
     icon: "/instagram.svg",
   },
+  Codepen: { bgColor: "#000000", textColor: "#FFFFFF", icon: "/globe.svg" },
+  Codewars: { bgColor: "#B1361E", textColor: "#FFFFFF", icon: "/globe.svg" },
+  DevTo: { bgColor: "#0A0A0A", textColor: "#FFFFFF", icon: "/globe.svg" },
+  FreeCodeCamp: {
+    bgColor: "#0A0A23",
+    textColor: "#FFFFFF",
+    icon: "/globe.svg",
+  },
+  FrontendMentor: {
+    bgColor: "#3E54A3",
+    textColor: "#FFFFFF",
+    icon: "/globe.svg",
+  },
+  Gitlab: { bgColor: "#FC6D26", textColor: "#FFFFFF", icon: "/globe.svg" },
+  HashNode: { bgColor: "#2962FF", textColor: "#FFFFFF", icon: "/globe.svg" },
+  StackOverflow: {
+    bgColor: "#F48024",
+    textColor: "#FFFFFF",
+    icon: "/globe.svg",
+  },
+  Twitch: { bgColor: "#9146FF", textColor: "#FFFFFF", icon: "/globe.svg" },
   Default: { bgColor: "#633CFF", textColor: "#FFFFFF", icon: "/globe.svg" },
 };
 

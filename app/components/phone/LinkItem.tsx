@@ -1,9 +1,7 @@
 import React from "react";
 import { getPlatformStyle } from "../constants/platforms";
-import {
-  ArrowRightIcon,
-  getIconComponent,
-} from "../icons/PlatformIconsPreviewButtons";
+import ArrowRightIcon from "../icons/ArrowRightIcon";
+import PlatformIcon, { PlatformType } from "../icons/platform/PlatformIcon";
 
 interface LinkItemProps {
   platform: string;
@@ -12,6 +10,27 @@ interface LinkItemProps {
 
 const LinkItem: React.FC<LinkItemProps> = ({ platform, url }) => {
   const style = getPlatformStyle(platform);
+
+  // Convert platform name to PlatformType if it matches one of our supported platforms
+  const isPlatformSupported = (platform: string): platform is PlatformType => {
+    const supportedPlatforms: PlatformType[] = [
+      "Codepen",
+      "Codewars",
+      "DevTo",
+      "Facebook",
+      "FreeCodeCamp",
+      "FrontendMentor",
+      "GitHub",
+      "Gitlab",
+      "HashNode",
+      "LinkedIn",
+      "StackOverflow",
+      "Twitch",
+      "Twitter",
+      "YouTube",
+    ];
+    return supportedPlatforms.includes(platform as PlatformType);
+  };
 
   return (
     <a
@@ -23,9 +42,10 @@ const LinkItem: React.FC<LinkItemProps> = ({ platform, url }) => {
         backgroundColor: style.bgColor,
       }}
     >
-      {/* Platform Icon */}
       <div className="absolute left-4 flex items-center justify-center">
-        {getIconComponent(platform) || (
+        {isPlatformSupported(platform) ? (
+          <PlatformIcon name={platform as PlatformType} version="ori" />
+        ) : (
           <img
             src={style.icon}
             alt={platform}
@@ -34,12 +54,10 @@ const LinkItem: React.FC<LinkItemProps> = ({ platform, url }) => {
         )}
       </div>
 
-      {/* Platform Name */}
       <span className="text-[16px] font-medium text-white absolute left-[44px]">
         {platform}
       </span>
 
-      {/* Arrow Icon */}
       <div className="absolute right-4">
         <ArrowRightIcon />
       </div>
