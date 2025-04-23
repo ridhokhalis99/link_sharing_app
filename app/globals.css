@@ -5,19 +5,19 @@
 @tailwind utilities;
 
 :root {
-  --background: #FAFAFA;
+  --background: #fafafa;
   --foreground: #333333;
-  --primary: #633CFF;
-  --primary-hover: #BEADFF;
-  --secondary: #EFEBFF;
-  --border: #D9D9D9;
-  --error: #FF3939;
+  --primary: #633cff;
+  --primary-hover: #beadff;
+  --secondary: #efebff;
+  --border: #d9d9d9;
+  --error: #ff3939;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #121212;
-    --foreground: #FFFFFF;
+    --foreground: #ffffff;
     --border: #333333;
   }
 }
@@ -25,22 +25,22 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 @layer components {
   .btn-primary {
     @apply bg-[#633CFF] text-white rounded-lg py-3 px-6 hover:bg-[#BEADFF] transition-colors font-semibold;
   }
-  
+
   .btn-secondary {
     @apply bg-[#EFEBFF] text-[#633CFF] rounded-lg py-3 px-6 hover:bg-[#D9CFFF] transition-colors font-semibold;
   }
-  
+
   .input {
-    @apply border border-[#D9D9D9] rounded-lg p-3 focus:outline-none focus:border-[#633CFF] focus:ring-1 focus:ring-[#633CFF] w-full;
+    @apply bg-white text-gray-800 border border-[#D9D9D9] rounded-lg p-3 focus:outline-none focus:border-[#633CFF] focus:ring-1 focus:ring-[#633CFF] w-full;
   }
-  
+
   .card {
     @apply bg-white rounded-xl shadow-sm p-6;
   }
