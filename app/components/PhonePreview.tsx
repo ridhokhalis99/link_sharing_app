@@ -95,6 +95,9 @@ const PhonePreview: React.FC<PhonePreviewProps> = ({
   imageUrl,
   links,
 }) => {
+  // Calculate how many empty boxes to show (total of 5 items - links)
+  const emptyBoxesCount = Math.max(0, 5 - (links?.length || 0));
+
   return (
     <div className="relative w-[308px] h-[632px] mx-auto">
       {/* Phone Frame SVG */}
@@ -120,7 +123,7 @@ const PhonePreview: React.FC<PhonePreviewProps> = ({
       {/* Phone Content - Scrollable Area */}
       <div className="absolute top-[48px] bottom-[16px] left-[16px] right-[16px] overflow-y-auto flex flex-col items-center">
         {/* User Profile */}
-        <div className="mt-12 mb-14 flex flex-col items-center">
+        <div className="mt-8 mb-8 flex flex-col items-center">
           <div className="w-[96px] h-[96px] rounded-full mb-6 overflow-hidden border-[3px] border-[#633CFF]">
             {imageUrl ? (
               <Image
@@ -162,14 +165,16 @@ const PhonePreview: React.FC<PhonePreviewProps> = ({
         </div>
 
         {/* Links */}
-        <div className="w-full space-y-5">
-          {links && links.length > 0 ? (
+        <div className="w-full space-y-4">
+          {/* Render actual links */}
+          {links &&
+            links.length > 0 &&
             links.map((link, index) => {
               const style =
                 platformStyles[link.platform] || platformStyles.Default;
               return (
                 <a
-                  key={index}
+                  key={`link-${index}`}
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -211,13 +216,18 @@ const PhonePreview: React.FC<PhonePreviewProps> = ({
                   </div>
                 </a>
               );
-            })
-          ) : (
-            <div className="text-center p-8 rounded-lg border-2 border-dashed border-[#DFDFDF]">
-              <p className="text-[16px] font-medium text-[#737373]">
-                No links added yet
-              </p>
-            </div>
+            })}
+
+          {/* Render empty placeholder boxes */}
+          {emptyBoxesCount > 0 && (
+            <>
+              {[...Array(emptyBoxesCount)].map((_, index) => (
+                <div
+                  key={`empty-${index}`}
+                  className="w-[237px] h-[44px] rounded-[8px] bg-[#f2f2f2] mx-auto"
+                />
+              ))}
+            </>
           )}
         </div>
       </div>
