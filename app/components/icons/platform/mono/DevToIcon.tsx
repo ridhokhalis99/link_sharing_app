@@ -1,6 +1,10 @@
 import React from "react";
 
-export const DevToIcon: React.FC = () => (
+interface DevToIconProps {
+  color?: string;
+}
+
+export const DevToIcon: React.FC<DevToIconProps> = ({ color = "#737373" }) => (
   <svg
     width="16"
     height="16"
@@ -11,7 +15,7 @@ export const DevToIcon: React.FC = () => (
     <g clipPath="url(#clip0_86_26215)">
       <path
         d="M12.25 0H3.75C1.67893 0 0 1.67893 0 3.75V12.25C0 14.3211 1.67893 16 3.75 16H12.25C14.3211 16 16 14.3211 16 12.25V3.75C16 1.67893 14.3211 0 12.25 0Z"
-        fill="#737373"
+        fill={color}
       />
       <path
         fillRule="evenodd"
