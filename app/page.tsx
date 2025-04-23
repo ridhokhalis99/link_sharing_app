@@ -1,103 +1,140 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import PhonePreview from './components/PhonePreview';
+import LinksManager from './components/LinksManager';
+import ProfileCard from './components/ProfileCard';
+
+interface LinkItem {
+  platform: string;
+  url: string;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeTab, setActiveTab] = useState<'links' | 'profile'>('links');
+  const [userProfile, setUserProfile] = useState({
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    imageUrl: '',
+  });
+  const [links, setLinks] = useState<LinkItem[]>([]);
+  const [isPreview, setIsPreview] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const handleProfileUpdate = (data: { name?: string; email?: string; imageUrl?: string }) => {
+    setUserProfile({
+      ...userProfile,
+      ...data
+    });
+  };
+
+  const handleLinksChange = (newLinks: LinkItem[]) => {
+    setLinks(newLinks);
+  };
+
+  if (isPreview) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] p-4 flex flex-col">
+        <header className="bg-white rounded-xl shadow-sm p-4 mb-6 flex justify-between items-center">
+          <button 
+            onClick={() => setIsPreview(false)}
+            className="btn-secondary flex items-center gap-2"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 12L6 8L10 4" stroke="#633CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Back to Editor
+          </button>
+          <button className="btn-primary">
+            Share Link
+          </button>
+        </header>
+        
+        <div className="flex-grow flex items-center justify-center">
+          <PhonePreview 
+            name={userProfile.name}
+            email={userProfile.email}
+            imageUrl={userProfile.imageUrl}
+            links={links}
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#FAFAFA] p-4 md:p-6">
+      {/* Header/Navigation */}
+      <nav className="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-wrap justify-between items-center">
+        <div className="flex items-center">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2">
+            <rect width="40" height="40" rx="8" fill="#633CFF"/>
+            <path d="M22.5 15L17.5 20L22.5 25" stroke="white" strokeWidth="2"/>
+            <path d="M17.5 25L22.5 30" stroke="white" strokeWidth="2"/>
+            <path d="M22.5 10L17.5 15" stroke="white" strokeWidth="2"/>
+          </svg>
+          <h1 className="font-bold text-xl">devlinks</h1>
+        </div>
+        <div className="flex gap-2 md:gap-4">
+          <button 
+            onClick={() => setActiveTab('links')}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${activeTab === 'links' ? 'btn-primary' : 'btn-secondary'}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8.52475 3.89141L11.7748 7.14141L8.52475 10.3914" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4.22485 7.14148H11.7748" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Links
+          </button>
+          <button 
+            onClick={() => setActiveTab('profile')}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${activeTab === 'profile' ? 'btn-primary' : 'btn-secondary'}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 10C10.2091 10 12 8.20914 12 6C12 3.79086 10.2091 2 8 2C5.79086 2 4 3.79086 4 6C4 8.20914 5.79086 10 8 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M14 14C12.8954 12.8954 10.1005 12 8 12C5.89949 12 3.10461 12.8954 2 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Profile Details
+          </button>
+        </div>
+        <button 
+          onClick={() => setIsPreview(true)}
+          className="btn-secondary border border-[#633CFF]"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+          Preview
+        </button>
+      </nav>
+
+      {/* Main Content Area */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Phone Preview */}
+        <div className="hidden md:block md:w-1/3">
+          <PhonePreview 
+            name={userProfile.name}
+            email={userProfile.email}
+            imageUrl={userProfile.imageUrl}
+            links={links}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+
+        {/* Content Management */}
+        <div className="w-full md:w-2/3">
+          {activeTab === 'links' ? (
+            <LinksManager 
+              onLinksChange={handleLinksChange}
+              initialLinks={links}
+            />
+          ) : (
+            <ProfileCard
+              name={userProfile.name}
+              email={userProfile.email}
+              imageUrl={userProfile.imageUrl}
+              onUpdate={handleProfileUpdate}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
