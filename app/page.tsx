@@ -17,8 +17,8 @@ interface LinkItem {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"links" | "profile">("links");
   const [userProfile, setUserProfile] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
+    name: "",
+    email: "",
     imageUrl: "",
   });
   const [links, setLinks] = useState<LinkItem[]>([]);
@@ -102,10 +102,10 @@ export default function Home() {
         <div className="flex gap-2 md:gap-4">
           <button
             onClick={() => setActiveTab("links")}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer ${
               activeTab === "links"
                 ? "bg-[#EFEBFF] text-[#633CFF] font-medium"
-                : "btn-secondary text-[#737373] font-normal"
+                : "text-[#737373] font-normal"
             }`}
           >
             <LinkIcon
@@ -116,10 +116,10 @@ export default function Home() {
           </button>
           <button
             onClick={() => setActiveTab("profile")}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer ${
               activeTab === "profile"
                 ? "bg-[#EFEBFF] text-[#633CFF] font-medium"
-                : "btn-secondary text-[#737373] font-normal"
+                : "text-[#737373] font-normal"
             }`}
           >
             <ProfileIcon
