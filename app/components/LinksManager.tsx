@@ -320,7 +320,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-6 flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#633CFF]"></div>
       </div>
     );
@@ -328,7 +328,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col justify-center items-center h-64 text-center">
+      <div className="flex flex-col justify-center items-center h-64 text-center">
         <p className="text-red-500 mb-4">{error}</p>
         <button
           className="px-4 py-2 bg-[#633CFF] text-white rounded-lg"
@@ -347,8 +347,8 @@ const LinksManager: React.FC<LinksManagerProps> = ({
     ) || orderChanged;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-      <header className="mb-6">
+    <div className="bg-white rounded-xl shadow-md">
+      <header className="p-6 pb-0">
         <h2 className="text-2xl font-bold mb-2">Customize your links</h2>
         <p className="text-gray-500">
           Add/edit/remove links below and then share all your profiles with the
@@ -356,70 +356,76 @@ const LinksManager: React.FC<LinksManagerProps> = ({
         </p>
       </header>
 
-      {visibleLinks.length === 0 ? (
-        <EmptyState onAddLink={addNewLink} />
-      ) : (
-        <>
-          <AddLinkButton onClick={addNewLink} />
+      <div className="p-6">
+        {visibleLinks.length === 0 ? (
+          <EmptyState onAddLink={addNewLink} />
+        ) : (
+          <>
+            <AddLinkButton onClick={addNewLink} />
 
-          <div className="mt-6 space-y-4">
-            {visibleLinks.map((link, index) => (
-              <LinkCard
-                key={link.id || index}
-                platform={link.platform}
-                url={link.url}
-                index={index}
-                onRemove={removeLink}
-                onEdit={updateLinkItem}
-                onReorder={reorderLinks}
-                isNew={link.isNew}
-                isModified={link.isModified}
-              />
-            ))}
-
-            <div className="flex justify-end mt-6">
-              <button
-                className={`px-6 py-3 rounded-lg ${
-                  hasUnsavedChanges
-                    ? "bg-[#633CFF] text-white hover:bg-[#5332D5]"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                } transition-colors disabled:opacity-60`}
-                onClick={handleSave}
-                disabled={isSaving || !hasUnsavedChanges}
-              >
-                {isSaving ? (
-                  <>
-                    <span className="inline-block mr-2">
-                      <svg
-                        className="animate-spin h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                    </span>
-                    Saving...
-                  </>
-                ) : (
-                  "Save"
-                )}
-              </button>
+            <div className="mt-6 space-y-4">
+              {visibleLinks.map((link, index) => (
+                <LinkCard
+                  key={link.id || index}
+                  platform={link.platform}
+                  url={link.url}
+                  index={index}
+                  onRemove={removeLink}
+                  onEdit={updateLinkItem}
+                  onReorder={reorderLinks}
+                  isNew={link.isNew}
+                  isModified={link.isModified}
+                />
+              ))}
             </div>
+          </>
+        )}
+      </div>
+
+      {visibleLinks.length > 0 && (
+        <div className="border-t border-[#D9D9D9]">
+          <div className="flex justify-end p-6">
+            <button
+              className={`px-6 py-3 rounded-lg ${
+                hasUnsavedChanges
+                  ? "bg-[#633CFF] text-white hover:bg-[#5332D5]"
+                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
+              } transition-colors disabled:opacity-60`}
+              onClick={handleSave}
+              disabled={isSaving || !hasUnsavedChanges}
+            >
+              {isSaving ? (
+                <>
+                  <span className="inline-block mr-2">
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </span>
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
+            </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

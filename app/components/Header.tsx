@@ -15,12 +15,13 @@ const Header: React.FC<HeaderProps> = ({
   onPreviewClick,
 }) => {
   return (
-    <nav className="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-wrap justify-between items-center">
-      <div className="flex items-center gap-2">
+    <nav className="bg-white rounded-xl shadow-sm p-4 mb-4 flex justify-between items-center">
+      <div className="flex items-center gap-2 w-1/3">
         <LogoIcon />
         <h1 className="text-2xl font-bold text-[#333333]">devlinks</h1>
       </div>
-      <div className="flex gap-2 md:gap-4">
+
+      <div className="flex gap-1 justify-center w-1/3">
         <button
           onClick={() => setActiveTab("links")}
           className={`px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer ${
@@ -50,12 +51,15 @@ const Header: React.FC<HeaderProps> = ({
           Profile Details
         </button>
       </div>
-      <button
-        onClick={onPreviewClick}
-        className="btn-secondary border border-[#633CFF] bg-white"
-      >
-        Preview
-      </button>
+
+      <div className="flex justify-end w-1/3">
+        <button
+          onClick={onPreviewClick}
+          className="px-4 py-2 border border-[#633CFF] text-[#633CFF] font-medium rounded-lg hover:bg-[#EFEBFF] transition-colors"
+        >
+          Preview
+        </button>
+      </div>
     </nav>
   );
 };

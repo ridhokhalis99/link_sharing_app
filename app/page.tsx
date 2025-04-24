@@ -46,6 +46,7 @@ export default function Home() {
         onPreviewClick={() => setIsPreview(true)}
       >
         <EditorMode
+          activeTab={activeTab}
           userProfile={userProfile}
           links={links}
           onProfileUpdate={handleProfileUpdate}

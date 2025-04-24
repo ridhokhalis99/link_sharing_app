@@ -15,13 +15,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   onPreviewClick,
 }) => {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onPreviewClick={onPreviewClick}
-      />
-      <main className="container mx-auto px-4 py-8 max-w-5xl">{children}</main>
+    <div className="min-h-screen bg-[#f5f5f5]">
+      <div className="max-w-[1392px] mx-auto px-4 py-3">
+        <Header
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onPreviewClick={onPreviewClick}
+        />
+      </div>
+      <main className="pb-16">{children}</main>
     </div>
   );
 };
