@@ -35,7 +35,7 @@ const PhonePreview: React.FC<PhonePreviewProps> = ({
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm h-full flex flex-col justify-start items-center overflow-auto">
       <PhoneFrame>
-        <div className="flex flex-col items-center overflow-auto">
+        <div className="flex flex-col items-center overflow-auto h-[540px] pb-4 custom-scrollbar">
           <UserProfile
             firstName={firstName}
             lastName={lastName}
@@ -45,6 +45,27 @@ const PhonePreview: React.FC<PhonePreviewProps> = ({
           <LinksList links={links} maxLinks={5} />
         </div>
       </PhoneFrame>
+
+      {/* Custom scrollbar styling */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 2px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #d9d9d9;
+          border-radius: 20px;
+        }
+
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #d9d9d9 transparent;
+        }
+      `}</style>
     </div>
   );
 };

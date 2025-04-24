@@ -379,13 +379,7 @@ const LinkCard: React.FC<LinkCardProps> = ({
   return (
     <div
       ref={ref}
-      className={`bg-[#FAFAFA] p-5 rounded-lg border ${
-        isNew
-          ? "border-green-400"
-          : isModified
-          ? "border-blue-400"
-          : "border-[#D9D9D9]"
-      } mb-4 relative cursor-move`}
+      className={`bg-[#FAFAFA] p-5 rounded-lg border border-[#D9D9D9] mb-4 relative cursor-move`}
       style={{ opacity }}
       data-handler-id={handlerId}
     >
