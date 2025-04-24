@@ -7,6 +7,7 @@ interface FrontendMentorIconProps {
 
 export const FrontendMentorIcon: React.FC<FrontendMentorIconProps> = ({
   color = "#737373",
+  className = "",
 }) => (
   <svg
     width="16"

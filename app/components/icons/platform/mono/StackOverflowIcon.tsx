@@ -5,6 +5,7 @@ interface StackOverflowIconProps {
 
 const StackOverflowIcon: React.FC<StackOverflowIconProps> = ({
   color = "#737373",
+  className = "",
 }) => (
   <svg
     width="16"

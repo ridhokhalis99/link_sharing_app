@@ -7,6 +7,7 @@ interface TwitchIconProps {
 
 export const TwitchIcon: React.FC<TwitchIconProps> = ({
   color = "#737373",
+  className = "",
 }) => (
   <svg
     width="16"

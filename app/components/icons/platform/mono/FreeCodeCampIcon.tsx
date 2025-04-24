@@ -5,6 +5,7 @@ interface FreeCodeCampIconProps {
 
 const FreeCodeCampIcon: React.FC<FreeCodeCampIconProps> = ({
   color = "#737373",
+  className = "",
 }) => (
   <svg
     width="16"

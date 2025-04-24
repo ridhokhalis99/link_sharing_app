@@ -7,6 +7,7 @@ interface TwitterIconProps {
 
 export const TwitterIcon: React.FC<TwitterIconProps> = ({
   color = "#737373",
+  className = "",
 }) => (
   <svg
     width="16"
