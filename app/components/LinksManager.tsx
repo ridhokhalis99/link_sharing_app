@@ -99,16 +99,24 @@ const LinksManager: React.FC<LinksManagerProps> = ({
   onLinksChange,
   initialLinks = [],
 }) => {
-  const [originalLinks, setOriginalLinks] = useState<LinkItem[]>([]);
+  const { user } = useAuth();
+  const [originalLinks, setOriginalLinks] = useState<LinkItem[]>(initialLinks);
   const [links, setLinks] = useState<LinkItem[]>(initialLinks);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(
+    initialLinks.length === 0
+  );
   const [error, setError] = useState<string | null>(null);
   const [orderChanged, setOrderChanged] = useState<boolean>(false);
-  const { user } = useAuth();
 
   useEffect(() => {
     let isMounted = true;
+
+    // If we already have initialLinks, don't fetch again
+    if (initialLinks.length > 0) {
+      return;
+    }
+
     const fetchLinks = async () => {
       if (!user) {
         console.log("No user found, waiting for auth context to initialize...");
@@ -167,7 +175,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [user?.id]);
+  }, [user?.id, initialLinks]);
 
   const addNewLink = () => {
     const highestOrder = links.reduce(
