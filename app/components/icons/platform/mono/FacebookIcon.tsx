@@ -1,6 +1,7 @@
 import React from "react";
 
 interface FacebookIconProps {
+  className?: string;
   color?: string;
 }
 
@@ -13,6 +14,7 @@ export const FacebookIcon: React.FC<FacebookIconProps> = ({
     viewBox="0 0 16 16"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className={className}
   >
     <g clipPath="url(#clip0_86_26141)">
       <path

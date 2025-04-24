@@ -1,16 +1,18 @@
 import React from "react";
 
 interface DevToIconProps {
+  className?: string;
   color?: string;
 }
 
-export const DevToIcon: React.FC<DevToIconProps> = ({ color = "#737373" }) => (
+export const DevToIcon: React.FC<DevToIconProps> = ({ color = "#737373", className }) => (
   <svg
     width="16"
     height="16"
     viewBox="0 0 16 16"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className={className}
   >
     <g clipPath="url(#clip0_86_26215)">
       <path

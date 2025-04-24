@@ -1,12 +1,17 @@
 import React from "react";
 
-const DevToIcon: React.FC = () => (
+interface DevToIconProps {
+  className?: string;
+}
+
+const DevToIcon: React.FC<DevToIconProps> = ({ className }) => (
   <svg
     width="16"
     height="16"
     viewBox="0 0 16 16"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className={className}
   >
     <g clipPath="url(#clip0_86_26570)">
       <path

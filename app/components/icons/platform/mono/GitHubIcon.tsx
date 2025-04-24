@@ -1,14 +1,19 @@
 interface GitHubIconProps {
   color?: string;
+  className?: string;
 }
 
-const GitHubIcon: React.FC<GitHubIconProps> = ({ color = "#737373" }) => (
+const GitHubIcon: React.FC<GitHubIconProps> = ({
+  color = "#737373",
+  className,
+}) => (
   <svg
     width="16"
     height="16"
     viewBox="0 0 16 16"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className={className}
   >
     <g clipPath="url(#clip0_86_26126)">
       <path
