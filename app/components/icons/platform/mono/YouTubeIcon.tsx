@@ -7,6 +7,7 @@ interface YouTubeIconProps {
 
 export const YouTubeIcon: React.FC<YouTubeIconProps> = ({
   color = "#737373",
+  className = "",
 }) => (
   <svg
     width="16"

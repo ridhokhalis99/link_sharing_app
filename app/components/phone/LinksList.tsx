@@ -9,9 +9,14 @@ export interface LinkItemType {
 interface LinksListProps {
   links: LinkItemType[];
   maxLinks?: number;
+  showEmptyPlaceholders?: boolean;
 }
 
-const LinksList: React.FC<LinksListProps> = ({ links, maxLinks = 5 }) => {
+const LinksList: React.FC<LinksListProps> = ({
+  links,
+  maxLinks = 5,
+  showEmptyPlaceholders = true,
+}) => {
   // Calculate how many empty boxes to show
   const emptyBoxesCount = Math.max(0, maxLinks - (links?.length || 0));
 
@@ -26,8 +31,8 @@ const LinksList: React.FC<LinksListProps> = ({ links, maxLinks = 5 }) => {
           </div>
         ))}
 
-      {/* Render empty placeholder boxes */}
-      {emptyBoxesCount > 0 && (
+      {/* Render empty placeholder boxes only if showEmptyPlaceholders is true */}
+      {showEmptyPlaceholders && emptyBoxesCount > 0 && (
         <>
           {Array.from({ length: emptyBoxesCount }).map((_, index) => (
             <div
