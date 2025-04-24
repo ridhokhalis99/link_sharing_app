@@ -41,11 +41,13 @@ const EmptyState: React.FC<{ onAddLink: () => void }> = ({ onAddLink }) => (
         priority
       />
     </div>
-    <h3 className="text-[#333333] text-2xl font-bold mb-6">Let's get you started</h3>
+    <h3 className="text-[#333333] text-2xl font-bold mb-6">
+      Let's get you started
+    </h3>
     <p className="text-[#737373] mb-6 max-w-md">
-      Use the "Add new link" button to get started. Once you have more
-      than one link, you can reorder and edit them. We're here to help
-      you share your profiles with everyone!
+      Use the "Add new link" button to get started. Once you have more than one
+      link, you can reorder and edit them. We're here to help you share your
+      profiles with everyone!
     </p>
     <button
       className="btn-primary px-8 py-3 bg-[#633CFF] text-white rounded-lg hover:bg-[#5332D5] transition-colors"
@@ -175,6 +177,13 @@ const LinksManager: React.FC<LinksManagerProps> = ({
 
   const removeLink = (index: number) => {
     const linkToRemove = links[index];
+    
+    // Special case: if this is the only link and it's new
+    if (links.length === 1 && linkToRemove.isNew) {
+      setLinks([]);
+      onLinksChange([]);
+      return;
+    }
 
     if (linkToRemove.isNew) {
       const newLinks = [...links];
@@ -356,28 +365,30 @@ const LinksManager: React.FC<LinksManagerProps> = ({
       </header>
 
       <div className="p-6 flex-1 overflow-y-auto">
-        {visibleLinks.length === 0 ? (
-          <EmptyState onAddLink={addNewLink} />
-        ) : (
-          <>
-            <AddLinkButton onClick={addNewLink} />
+        {/* Always show the Add New Link button */}
+        <AddLinkButton onClick={addNewLink} />
 
-            <div className="mt-6 space-y-4">
-              {visibleLinks.map((link, index) => (
-                <LinkCard
-                  key={link.id || index}
-                  platform={link.platform}
-                  url={link.url}
-                  index={index}
-                  onRemove={removeLink}
-                  onEdit={updateLinkItem}
-                  onReorder={reorderLinks}
-                  isNew={link.isNew}
-                  isModified={link.isModified}
-                />
-              ))}
-            </div>
-          </>
+        {/* Show empty state only when there are no links to begin with */}
+        {visibleLinks.length === 0 && links.length === 0 ? (
+          <div className="mt-6">
+            <EmptyState onAddLink={addNewLink} />
+          </div>
+        ) : (
+          <div className="mt-6 space-y-4">
+            {visibleLinks.map((link, index) => (
+              <LinkCard
+                key={link.id || index}
+                platform={link.platform}
+                url={link.url}
+                index={index}
+                onRemove={removeLink}
+                onEdit={updateLinkItem}
+                onReorder={reorderLinks}
+                isNew={link.isNew}
+                isModified={link.isModified}
+              />
+            ))}
+          </div>
         )}
       </div>
 
