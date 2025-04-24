@@ -119,7 +119,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           fileInputRef.current.files[0]
         );
         if (uploadedUrl) {
-          finalImageUrl = uploadedUrl;
+          // Add a cache-busting parameter to ensure the browser loads the new image
+          finalImageUrl = `${uploadedUrl}?t=${Date.now()}`;
         } else {
           throw new Error("Failed to upload profile image");
         }
