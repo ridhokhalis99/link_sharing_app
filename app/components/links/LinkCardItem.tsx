@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
-import { useDrag, useDrop } from "react-dnd";
-import PlatformIcon from "../icons/platform/PlatformIcon";
+import { useDrag, useDrop, DropTargetMonitor } from "react-dnd";
+import PlatformIcon, { PlatformType } from "../icons/platform/PlatformIcon";
 import { LinkItem } from "../../hooks/useLinksManager";
 
 interface LinkCardItemProps {
@@ -31,14 +31,14 @@ export const LinkCardItem = ({
 }: LinkCardItemProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const [{ handlerId }, drop] = useDrop({
-    accept: "link",
+  const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: string | symbol | null }>({
+    accept: "LINK_CARD",
     collect(monitor) {
       return {
         handlerId: monitor.getHandlerId(),
       };
     },
-    hover(item: DragItem, monitor) {
+    hover(item: DragItem, monitor: DropTargetMonitor) {
       if (!ref.current) {
         return;
       }
@@ -67,10 +67,10 @@ export const LinkCardItem = ({
     },
   });
 
-  const [{ isDragging }, drag] = useDrag({
-    type: "link",
+  const [{ isDragging }, drag] = useDrag<DragItem, unknown, { isDragging: boolean }>({
+    type: "LINK_CARD",
     item: () => {
-      return { id: link.id, index };
+      return { id: link.id || String(index), index, type: "LINK_CARD" };
     },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -145,7 +145,7 @@ export const LinkCardItem = ({
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-4">
             <PlatformIcon
-              platform={link.platform}
+              name={link.platform as PlatformType}
               className="h-5 w-5 text-[#737373]"
             />
           </div>

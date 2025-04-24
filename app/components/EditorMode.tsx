@@ -32,6 +32,21 @@ const EditorMode: React.FC<EditorModeProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState("links");
 
+  // Create a wrapper function that converts partial updates to full UserProfile updates
+  const handleProfileUpdate = (data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    imageUrl?: string;
+  }) => {
+    // Merge the partial update with the current profile data
+    const updatedProfile: UserProfile = {
+      ...userProfile,
+      ...data
+    };
+    onProfileUpdate(updatedProfile);
+  };
+
   return (
     <div className="p-4 min-h-screen bg-[#FAFAFA] flex flex-col">
       <div className="flex flex-col lg:flex-row gap-6">
@@ -95,14 +110,14 @@ const EditorMode: React.FC<EditorModeProps> = ({
           </div>
 
           {activeTab === "links" ? (
-            <LinksManager links={links} onChange={onLinksUpdate} />
+            <LinksManager initialLinks={links} onLinksChange={onLinksUpdate} />
           ) : (
             <ProfileCard
               firstName={userProfile.firstName}
               lastName={userProfile.lastName}
               email={userProfile.email}
               imageUrl={userProfile.imageUrl}
-              onChange={onProfileUpdate}
+              onUpdate={handleProfileUpdate}
             />
           )}
         </div>

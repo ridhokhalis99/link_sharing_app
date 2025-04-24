@@ -7,6 +7,7 @@ interface LinkedInIconProps {
 
 export const LinkedInIcon: React.FC<LinkedInIconProps> = ({
   color = "#737373",
+  className,
 }) => (
   <svg
     width="16"

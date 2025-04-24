@@ -7,10 +7,11 @@ import {
   deleteLink,
   updateLinksOrder,
 } from "../lib/links";
+import { PlatformType } from "../components/icons/platform/PlatformIcon";
 
 export interface LinkItem {
   id?: string;
-  platform: string;
+  platform: PlatformType | string;
   url: string;
   order?: number;
   isNew?: boolean;

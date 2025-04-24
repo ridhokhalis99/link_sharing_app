@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import MainLayout from "./components/MainLayout";
 import EditorMode from "./components/EditorMode";
 import PreviewMode from "./components/PreviewMode";
@@ -37,18 +39,19 @@ export default function Home() {
   }
 
   return (
-    <MainLayout
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      onPreviewClick={() => setIsPreview(true)}
-    >
-      <EditorMode
+    <DndProvider backend={HTML5Backend}>
+      <MainLayout
         activeTab={activeTab}
-        userProfile={userProfile}
-        links={links}
-        onProfileUpdate={handleProfileUpdate}
-        onLinksChange={handleLinksChange}
-      />
-    </MainLayout>
+        setActiveTab={setActiveTab}
+        onPreviewClick={() => setIsPreview(true)}
+      >
+        <EditorMode
+          userProfile={userProfile}
+          links={links}
+          onProfileUpdate={handleProfileUpdate}
+          onLinksUpdate={handleLinksChange}
+        />
+      </MainLayout>
+    </DndProvider>
   );
 }
