@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import LinksManager from "./LinksManager";
 import ProfileCard from "./ProfileCard";
 import PhonePreview from "./PhonePreview";
@@ -32,11 +32,6 @@ const EditorMode: React.FC<EditorModeProps> = ({
   onLinksUpdate,
   activeTab,
 }) => {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const phoneContainerRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerHeight, setContainerHeight] = useState<number | null>(null);
-
   // Create a wrapper function that converts partial updates to full UserProfile updates
   const handleProfileUpdate = (data: {
     firstName?: string;
@@ -52,59 +47,12 @@ const EditorMode: React.FC<EditorModeProps> = ({
     onProfileUpdate(updatedProfile);
   };
 
-  // Sync heights between sections
-  useEffect(() => {
-    const syncHeights = () => {
-      if (contentRef.current && phoneContainerRef.current) {
-        const phoneHeight = phoneContainerRef.current.scrollHeight;
-        const contentHeight = contentRef.current.scrollHeight;
-
-        // Use the taller of the two heights for both containers
-        const maxHeight = Math.max(phoneHeight, contentHeight);
-        setContainerHeight(maxHeight);
-      }
-    };
-
-    // Initial sync after render
-    const timer = setTimeout(syncHeights, 100);
-
-    // Create a ResizeObserver to watch for content height changes
-    const resizeObserver = new ResizeObserver(() => {
-      syncHeights();
-    });
-
-    if (contentRef.current) {
-      resizeObserver.observe(contentRef.current);
-    }
-
-    if (phoneContainerRef.current) {
-      resizeObserver.observe(phoneContainerRef.current);
-    }
-
-    // Sync heights when tab changes, links update, or on window resize
-    window.addEventListener("resize", syncHeights);
-
-    return () => {
-      clearTimeout(timer);
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", syncHeights);
-    };
-  }, [activeTab, links.length]);
-
   return (
     <div className="min-h-[calc(100vh-100px)] flex flex-col bg-[#f5f5f5]">
-      <div
-        ref={containerRef}
-        className="flex flex-col lg:flex-row gap-6 px-6 py-4 max-w-[1392px] mx-auto w-full"
-      >
-        <div
-          className="lg:w-[560px] flex-shrink-0 flex"
-          ref={phoneContainerRef}
-          style={{
-            minHeight: containerHeight ? `${containerHeight}px` : "auto",
-          }}
-        >
-          <div className="sticky top-4 w-full">
+      <div className="flex flex-col lg:flex-row gap-6 px-6 py-4 max-w-[1392px] mx-auto w-full">
+        {/* Phone Preview Section - Fixed height with scrolling */}
+        <div className="lg:w-[560px] flex-shrink-0">
+          <div className="sticky top-4 w-full h-[calc(100vh-120px)] overflow-auto">
             <PhonePreview
               firstName={userProfile.firstName}
               lastName={userProfile.lastName}
@@ -115,13 +63,8 @@ const EditorMode: React.FC<EditorModeProps> = ({
           </div>
         </div>
 
-        <div
-          className="flex-1"
-          ref={contentRef}
-          style={{
-            minHeight: containerHeight ? `${containerHeight}px` : "auto",
-          }}
-        >
+        {/* Content Section - Fixed height with scrolling */}
+        <div className="flex-1 h-[calc(100vh-120px)] overflow-auto">
           {activeTab === "links" ? (
             <LinksManager initialLinks={links} onLinksChange={onLinksUpdate} />
           ) : (

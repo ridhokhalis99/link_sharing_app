@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import LinkCard from "./LinkCard";
 import {
   getUserLinks,
@@ -30,47 +31,24 @@ interface LinksManagerProps {
  * EmptyState component for when no links are present
  */
 const EmptyState: React.FC<{ onAddLink: () => void }> = ({ onAddLink }) => (
-  <div className="bg-[#FAFAFA] rounded-lg p-6 flex flex-col items-center justify-center text-center">
-    <div className="w-20 h-20 mb-4 flex items-center justify-center">
-      <svg
-        width="80"
-        height="80"
-        viewBox="0 0 80 80"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <path
-          d="M40 68.3333C55.6917 68.3333 68.3333 55.6917 68.3333 40C68.3333 24.3083 55.6917 11.6667 40 11.6667C24.3083 11.6667 11.6667 24.3083 11.6667 40C11.6667 55.6917 24.3083 68.3333 40 68.3333Z"
-          stroke="#633CFF"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M26.6667 40H53.3333"
-          stroke="#633CFF"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M40 26.6667V53.3333"
-          stroke="#633CFF"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+  <div className="bg-[#FAFAFA] rounded-lg p-10 flex flex-col items-center justify-center text-center">
+    <div className="w-[250px] h-[160px] mb-10 flex items-center justify-center">
+      <Image
+        src="/empty-link.svg"
+        alt="Empty links illustration"
+        width={250}
+        height={160}
+        priority
+      />
     </div>
-    <h3 className="text-xl font-bold mb-4">Let's get you started</h3>
-    <p className="text-gray-500 mb-6">
-      Use the "Add New Link" button to get started. Once you have more than one
-      link, you can reorder and edit them. We're here to help you share your
-      profiles with everyone!
+    <h3 className="text-[#333333] text-2xl font-bold mb-6">Let's get you started</h3>
+    <p className="text-[#737373] mb-6 max-w-md">
+      Use the "Add new link" button to get started. Once you have more
+      than one link, you can reorder and edit them. We're here to help
+      you share your profiles with everyone!
     </p>
     <button
-      className="btn-primary px-6 py-3 bg-[#633CFF] text-white rounded-lg hover:bg-[#5332D5] transition-colors"
+      className="btn-primary px-8 py-3 bg-[#633CFF] text-white rounded-lg hover:bg-[#5332D5] transition-colors"
       onClick={onAddLink}
       aria-label="Add your first link"
     >
@@ -84,11 +62,11 @@ const EmptyState: React.FC<{ onAddLink: () => void }> = ({ onAddLink }) => (
  */
 const AddLinkButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <button
-    className="btn-secondary w-full py-3 border-2 border-[#633CFF] text-[#633CFF] font-medium rounded-lg hover:bg-[#EFEBFF] transition-colors"
+    className="w-full py-3 border border-[#633CFF] text-[#633CFF] font-medium rounded-lg hover:bg-[#EFEBFF] transition-colors bg-[#EFEBFF] flex justify-center items-center"
     onClick={onClick}
     aria-label="Add new link"
   >
-    + Add New Link
+    + Add new link
   </button>
 );
 
@@ -175,7 +153,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [user?.id, initialLinks]);
+  }, [user?.id]); // Removed initialLinks dependency to prevent refetching
 
   const addNewLink = () => {
     const highestOrder = links.reduce(
@@ -210,6 +188,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
         isDeleted: true,
       };
       setLinks(newLinks);
+      // Pass the filtered links to ensure the parent components get the correct visible links
       onLinksChange(newLinks.filter((link) => !link.isDeleted));
     }
   };
@@ -303,18 +282,30 @@ const LinksManager: React.FC<LinksManagerProps> = ({
 
       await Promise.all(savePromises);
 
-      const updatedLinks = await getUserLinks();
-      const formattedLinks = updatedLinks.map((link) => ({
-        id: link.id,
-        platform: link.platform,
-        url: link.url,
-        order: link.order,
-      }));
+      // If all links were deleted, set empty arrays instead of fetching
+      const allLinksDeleted = links.every(
+        (link) => link.isDeleted || (link.isNew && link.isDeleted)
+      );
+      if (allLinksDeleted) {
+        setOriginalLinks([]);
+        setLinks([]);
+        onLinksChange([]);
+        setOrderChanged(false);
+      } else {
+        // Otherwise refresh links from server
+        const updatedLinks = await getUserLinks();
+        const formattedLinks = updatedLinks.map((link) => ({
+          id: link.id,
+          platform: link.platform,
+          url: link.url,
+          order: link.order,
+        }));
 
-      setOriginalLinks(formattedLinks);
-      setLinks(formattedLinks);
-      onLinksChange(formattedLinks);
-      setOrderChanged(false);
+        setOriginalLinks(formattedLinks);
+        setLinks(formattedLinks);
+        onLinksChange(formattedLinks);
+        setOrderChanged(false);
+      }
 
       console.log("All changes saved successfully");
     } catch (error) {
@@ -356,7 +347,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
 
   return (
     <div className="bg-white rounded-xl shadow-md flex flex-col h-full">
-      <header className="p-6 pb-0">
+      <header className="p-6 pb-0 sticky top-0 bg-white z-10">
         <h2 className="text-2xl font-bold mb-2">Customize your links</h2>
         <p className="text-gray-500">
           Add/edit/remove links below and then share all your profiles with the
@@ -364,14 +355,14 @@ const LinksManager: React.FC<LinksManagerProps> = ({
         </p>
       </header>
 
-      <div className="p-6 flex-1 flex flex-col">
+      <div className="p-6 flex-1 overflow-y-auto">
         {visibleLinks.length === 0 ? (
           <EmptyState onAddLink={addNewLink} />
         ) : (
           <>
             <AddLinkButton onClick={addNewLink} />
 
-            <div className="mt-6 space-y-4 flex-1">
+            <div className="mt-6 space-y-4">
               {visibleLinks.map((link, index) => (
                 <LinkCard
                   key={link.id || index}
@@ -390,17 +381,14 @@ const LinksManager: React.FC<LinksManagerProps> = ({
         )}
       </div>
 
-      {visibleLinks.length > 0 && (
-        <div className="border-t border-[#D9D9D9] mt-auto">
+      {/* Show the Save button when there are unsaved changes, regardless of whether there are visible links */}
+      {hasUnsavedChanges && (
+        <div className="border-t border-[#D9D9D9] sticky bottom-0 bg-white z-10">
           <div className="flex justify-end p-6">
             <button
-              className={`px-6 py-3 rounded-lg ${
-                hasUnsavedChanges
-                  ? "bg-[#633CFF] text-white hover:bg-[#5332D5]"
-                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
-              } transition-colors disabled:opacity-60`}
+              className="px-6 py-3 rounded-lg bg-[#633CFF] text-white hover:bg-[#5332D5] transition-colors disabled:opacity-60"
               onClick={handleSave}
-              disabled={isSaving || !hasUnsavedChanges}
+              disabled={isSaving}
             >
               {isSaving ? (
                 <>

@@ -389,20 +389,6 @@ const LinkCard: React.FC<LinkCardProps> = ({
       style={{ opacity }}
       data-handler-id={handlerId}
     >
-      {(isNew || isModified) && (
-        <div className="absolute top-2 right-2 z-10">
-          <span
-            className={`text-xs px-2 py-1 rounded-full ${
-              isNew
-                ? "bg-green-100 text-green-800"
-                : "bg-blue-100 text-blue-800"
-            }`}
-          >
-            {isNew ? "New" : "Modified"}
-          </span>
-        </div>
-      )}
-
       <div className="flex justify-between items-center mb-4 cursor-move">
         <div className="flex items-center">
           <DragHandle />

@@ -33,9 +33,9 @@ const PhonePreview: React.FC<PhonePreviewProps> = ({
   links,
 }) => {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm h-full flex flex-col justify-center items-center">
+    <div className="bg-white p-6 rounded-xl shadow-sm h-full flex flex-col justify-start items-center overflow-auto">
       <PhoneFrame>
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center overflow-auto">
           <UserProfile
             firstName={firstName}
             lastName={lastName}

@@ -116,21 +116,24 @@ export function useLinksManager(initialLinks: LinkItem[] = []) {
   // Remove a link
   const removeLink = (index: number) => {
     const linkToRemove = links[index];
-
+    let newLinks = [...links];
+    
     if (linkToRemove.isNew) {
-      const newLinks = [...links];
+      // For new links, remove directly from the array
       newLinks.splice(index, 1);
-      setLinks(newLinks);
-      return newLinks;
     } else {
-      const newLinks = [...links];
+      // For existing links, mark as deleted but maintain in the array for backend operations
       newLinks[index] = {
         ...linkToRemove,
         isDeleted: true,
       };
-      setLinks(newLinks);
-      return newLinks.filter((link) => !link.isDeleted);
     }
+    
+    // Update the state with the new links array
+    setLinks(newLinks);
+    
+    // Return the visible links for UI
+    return newLinks.filter(link => !link.isDeleted);
   };
 
   // Update a link
@@ -229,21 +232,33 @@ export function useLinksManager(initialLinks: LinkItem[] = []) {
 
       await Promise.all(savePromises);
 
-      // Refresh links from server
-      const updatedLinks = await getUserLinks();
-      const formattedLinks = updatedLinks.map((link) => ({
-        id: link.id,
-        platform: link.platform,
-        url: link.url,
-        order: link.order,
-      }));
+      // Check if we deleted all links
+      const allLinksDeleted = links.every(link => link.isDeleted) && links.length > 0;
+      
+      if (allLinksDeleted) {
+        // If all links were deleted, set empty arrays instead of fetching
+        setOriginalLinks([]);
+        setLinks([]);
+        setOrderChanged(false);
+        console.log("All links deleted successfully");
+        return [];
+      } else {
+        // Otherwise, refresh links from server
+        const updatedLinks = await getUserLinks();
+        const formattedLinks = updatedLinks.map((link) => ({
+          id: link.id,
+          platform: link.platform,
+          url: link.url,
+          order: link.order,
+        }));
 
-      setOriginalLinks(formattedLinks);
-      setLinks(formattedLinks);
-      setOrderChanged(false);
+        setOriginalLinks(formattedLinks);
+        setLinks(formattedLinks);
+        setOrderChanged(false);
 
-      console.log("All changes saved successfully");
-      return formattedLinks;
+        console.log("All changes saved successfully");
+        return formattedLinks;
+      }
     } catch (error) {
       console.error("Error saving changes:", error);
       throw error;

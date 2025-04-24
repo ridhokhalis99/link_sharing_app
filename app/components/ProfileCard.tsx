@@ -175,7 +175,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
 
   return (
     <div className="bg-white rounded-xl shadow-md flex flex-col h-full">
-      <div className="p-6 pb-0">
+      <div className="p-6 pb-0 sticky top-0 bg-white z-10">
         <h2 className="text-[32px] font-bold mb-2 text-[#333333]">
           Profile Details
         </h2>
@@ -196,8 +196,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         )}
       </div>
 
-      {/* Profile Picture */}
-      <div className="p-6 flex-1 flex flex-col">
+      {/* Profile Picture and Form Fields */}
+      <div className="p-6 flex-1 overflow-y-auto">
+        {/* Profile Picture */}
         <div className="bg-[#FAFAFA] p-5 rounded-xl mb-6">
           <div className="flex flex-col md:flex-row md:items-center">
             <label className="text-[#737373] font-medium mb-4 md:mb-0 md:w-1/3">
@@ -314,7 +315,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
       </div>
 
-      <div className="border-t border-[#D9D9D9] mt-auto">
+      <div className="border-t border-[#D9D9D9] sticky bottom-0 bg-white z-10">
         <div className="flex justify-end p-6">
           <button
             onClick={handleSaveProfile}
