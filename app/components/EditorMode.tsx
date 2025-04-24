@@ -34,6 +34,8 @@ const EditorMode: React.FC<EditorModeProps> = ({
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const phoneContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState<number | null>(null);
 
   // Create a wrapper function that converts partial updates to full UserProfile updates
   const handleProfileUpdate = (data: {
@@ -50,12 +52,16 @@ const EditorMode: React.FC<EditorModeProps> = ({
     onProfileUpdate(updatedProfile);
   };
 
-  // Sync heights between content and phone container
+  // Sync heights between sections
   useEffect(() => {
     const syncHeights = () => {
       if (contentRef.current && phoneContainerRef.current) {
-        const contentHeight = contentRef.current.getBoundingClientRect().height;
-        phoneContainerRef.current.style.height = `${contentHeight}px`;
+        const phoneHeight = phoneContainerRef.current.scrollHeight;
+        const contentHeight = contentRef.current.scrollHeight;
+
+        // Use the taller of the two heights for both containers
+        const maxHeight = Math.max(phoneHeight, contentHeight);
+        setContainerHeight(maxHeight);
       }
     };
 
@@ -71,7 +77,11 @@ const EditorMode: React.FC<EditorModeProps> = ({
       resizeObserver.observe(contentRef.current);
     }
 
-    // Sync heights when tab changes or links update
+    if (phoneContainerRef.current) {
+      resizeObserver.observe(phoneContainerRef.current);
+    }
+
+    // Sync heights when tab changes, links update, or on window resize
     window.addEventListener("resize", syncHeights);
 
     return () => {
@@ -83,9 +93,18 @@ const EditorMode: React.FC<EditorModeProps> = ({
 
   return (
     <div className="min-h-[calc(100vh-100px)] flex flex-col bg-[#f5f5f5]">
-      <div className="flex flex-col lg:flex-row gap-6 px-6 py-4 max-w-[1392px] mx-auto w-full">
-        <div className="lg:w-[560px] flex-shrink-0" ref={phoneContainerRef}>
-          <div className="sticky top-4 h-full">
+      <div
+        ref={containerRef}
+        className="flex flex-col lg:flex-row gap-6 px-6 py-4 max-w-[1392px] mx-auto w-full"
+      >
+        <div
+          className="lg:w-[560px] flex-shrink-0 flex"
+          ref={phoneContainerRef}
+          style={{
+            minHeight: containerHeight ? `${containerHeight}px` : "auto",
+          }}
+        >
+          <div className="sticky top-4 w-full">
             <PhonePreview
               firstName={userProfile.firstName}
               lastName={userProfile.lastName}
@@ -96,7 +115,13 @@ const EditorMode: React.FC<EditorModeProps> = ({
           </div>
         </div>
 
-        <div className="flex-1" ref={contentRef}>
+        <div
+          className="flex-1"
+          ref={contentRef}
+          style={{
+            minHeight: containerHeight ? `${containerHeight}px` : "auto",
+          }}
+        >
           {activeTab === "links" ? (
             <LinksManager initialLinks={links} onLinksChange={onLinksUpdate} />
           ) : (

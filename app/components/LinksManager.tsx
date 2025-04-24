@@ -347,7 +347,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
     ) || orderChanged;
 
   return (
-    <div className="bg-white rounded-xl shadow-md">
+    <div className="bg-white rounded-xl shadow-md flex flex-col h-full">
       <header className="p-6 pb-0">
         <h2 className="text-2xl font-bold mb-2">Customize your links</h2>
         <p className="text-gray-500">
@@ -356,14 +356,14 @@ const LinksManager: React.FC<LinksManagerProps> = ({
         </p>
       </header>
 
-      <div className="p-6">
+      <div className="p-6 flex-1 flex flex-col">
         {visibleLinks.length === 0 ? (
           <EmptyState onAddLink={addNewLink} />
         ) : (
           <>
             <AddLinkButton onClick={addNewLink} />
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-6 space-y-4 flex-1">
               {visibleLinks.map((link, index) => (
                 <LinkCard
                   key={link.id || index}
@@ -383,7 +383,7 @@ const LinksManager: React.FC<LinksManagerProps> = ({
       </div>
 
       {visibleLinks.length > 0 && (
-        <div className="border-t border-[#D9D9D9]">
+        <div className="border-t border-[#D9D9D9] mt-auto">
           <div className="flex justify-end p-6">
             <button
               className={`px-6 py-3 rounded-lg ${

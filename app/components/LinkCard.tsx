@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useDrag, useDrop } from "react-dnd";
 import { getPlatformStyle, PlatformStyle } from "./constants/platforms";
 import PlatformIcon from "./icons/platform/PlatformIcon";
+import TextInput from "./TextInput";
 
 // Define type for the drag item
 interface DragItem {
@@ -268,16 +269,14 @@ const UrlInput: React.FC<{
   platform: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }> = ({ value, platform, onChange }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-800 mb-1">Link</label>
-    <input
-      type="url"
-      className="input w-full p-3 rounded-lg border border-[#D9D9D9] bg-white focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#633CFF]/25 transition-all"
-      value={value}
-      onChange={onChange}
-      placeholder={`e.g. https://${platform.toLowerCase()}.com/username`}
-    />
-  </div>
+  <TextInput
+    id={`link-url-${platform}`}
+    label="Link"
+    type="url"
+    value={value}
+    onChange={onChange}
+    placeholder={`e.g. https://${platform.toLowerCase()}.com/username`}
+  />
 );
 
 /**

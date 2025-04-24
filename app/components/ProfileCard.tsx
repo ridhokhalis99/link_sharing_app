@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { saveUserProfile, uploadProfileImage } from "../lib/profiles";
 import { useAuth } from "../context/AuthContext";
+import TextInput from "./TextInput";
 
 interface ProfileCardProps {
   firstName: string;
@@ -173,7 +174,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md">
+    <div className="bg-white rounded-xl shadow-md flex flex-col h-full">
       <div className="p-6 pb-0">
         <h2 className="text-[32px] font-bold mb-2 text-[#333333]">
           Profile Details
@@ -196,7 +197,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       </div>
 
       {/* Profile Picture */}
-      <div className="p-6">
+      <div className="p-6 flex-1 flex flex-col">
         <div className="bg-[#FAFAFA] p-5 rounded-xl mb-6">
           <div className="flex flex-col md:flex-row md:items-center">
             <label className="text-[#737373] font-medium mb-4 md:mb-0 md:w-1/3">
@@ -263,61 +264,45 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
 
         {/* Form Fields - All in one container */}
-        <div className="bg-[#FAFAFA] p-5 rounded-xl">
+        <div className="bg-[#FAFAFA] p-5 rounded-xl flex-1 flex flex-col">
           {/* First Name */}
           <div className="mb-6">
-            <label
-              htmlFor="firstName"
-              className="block text-[#737373] font-medium mb-1"
-            >
-              First name*
-            </label>
-            <input
+            <TextInput
               id="firstName"
+              label="First name"
               type="text"
-              className="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#EFEBFF]"
               value={formState.firstName}
               onChange={(e) => {
                 handleInputChange("firstName", e.target.value);
                 safeUpdate({ firstName: e.target.value });
               }}
               placeholder="e.g. John"
+              required={true}
             />
           </div>
 
           {/* Last Name */}
           <div className="mb-6">
-            <label
-              htmlFor="lastName"
-              className="block text-[#737373] font-medium mb-1"
-            >
-              Last name*
-            </label>
-            <input
+            <TextInput
               id="lastName"
+              label="Last name"
               type="text"
-              className="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#EFEBFF]"
               value={formState.lastName}
               onChange={(e) => {
                 handleInputChange("lastName", e.target.value);
                 safeUpdate({ lastName: e.target.value });
               }}
               placeholder="e.g. Appleseed"
+              required={true}
             />
           </div>
 
           {/* Email */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-[#737373] font-medium mb-1"
-            >
-              Email
-            </label>
-            <input
+          <div className="flex-1">
+            <TextInput
               id="email"
+              label="Email"
               type="email"
-              className="w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#633CFF] focus:ring-2 focus:ring-[#EFEBFF]"
               value={formState.email}
               onChange={(e) => {
                 handleInputChange("email", e.target.value);
@@ -329,7 +314,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
       </div>
 
-      <div className="border-t border-[#D9D9D9]">
+      <div className="border-t border-[#D9D9D9] mt-auto">
         <div className="flex justify-end p-6">
           <button
             onClick={handleSaveProfile}
